@@ -31,3 +31,10 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# .env
+.env
+
+# DB Data
+appdb-data
+keycloakdb-data
