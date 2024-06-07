@@ -2,6 +2,7 @@ package com.marcusmonteirodesouza.realworld.api.exceptionhandlers;
 
 import com.marcusmonteirodesouza.realworld.api.exceptionhandlers.dto.ErrorResponse;
 import com.marcusmonteirodesouza.realworld.api.exceptions.AlreadyExistsException;
+import jakarta.ws.rs.NotFoundException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -24,6 +25,9 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
         } else if (ex instanceof IllegalArgumentException) {
             errorResponse = new ErrorResponse(new String[] {ex.getMessage()});
             statusCode = HttpStatus.UNPROCESSABLE_ENTITY;
+        } else if (ex instanceof NotFoundException) {
+            errorResponse = new ErrorResponse(new String[] {ex.getMessage()});
+            statusCode = HttpStatus.NOT_FOUND;
         } else {
             errorResponse = new ErrorResponse(new String[] {"Internal Server Error"});
             statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
