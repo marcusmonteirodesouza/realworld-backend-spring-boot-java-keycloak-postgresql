@@ -1,9 +1,11 @@
 package com.marcusmonteirodesouza.realworld.api.users.services;
 
+import com.google.common.base.Optional;
 import com.marcusmonteirodesouza.realworld.api.exceptions.AlreadyExistsException;
 import com.marcusmonteirodesouza.realworld.api.users.models.User;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import jakarta.ws.rs.NotFoundException;
 import org.apache.commons.validator.routines.EmailValidator;
 import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.admin.client.Keycloak;
@@ -85,6 +87,24 @@ public class UsersService {
 
         return new User(
                 userRepresentation.getEmail(), userRepresentation.getUsername(), null, null);
+    }
+
+    public User getUserByEmail(String email) {
+        var usersResource = keycloakAdminInstance.realm(keycloakRealm).users();
+
+        var usersByEmail = usersResource.searchByEmail(email, true);
+
+        if (usersByEmail.isEmpty()) {
+            throw new NotFoundException("User with email '" + email + "' not found");
+        }
+
+        var userRepresentation = usersByEmail.getFirst();
+
+        return new User(
+                userRepresentation.getEmail(),
+                userRepresentation.getUsername(),
+                Optional.fromNullable(userRepresentation.firstAttribute("bio")),
+                Optional.fromNullable(userRepresentation.firstAttribute("image")));
     }
 
     public String getToken(String username, String password) {

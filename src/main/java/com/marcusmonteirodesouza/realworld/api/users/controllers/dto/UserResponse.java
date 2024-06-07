@@ -1,20 +1,13 @@
 package com.marcusmonteirodesouza.realworld.api.users.controllers.dto;
 
-import com.google.common.base.Optional;
-
 public class UserResponse {
     private String email;
     private String username;
     private String token;
-    private Optional<String> bio;
-    private Optional<String> image;
+    private String bio;
+    private String image;
 
-    public UserResponse(
-            String email,
-            String username,
-            String token,
-            Optional<String> bio,
-            Optional<String> image) {
+    public UserResponse(String email, String username, String token, String bio, String image) {
         this.email = email;
         this.username = username;
         this.token = token;
@@ -46,19 +39,19 @@ public class UserResponse {
         this.token = token;
     }
 
-    public Optional<String> getBio() {
+    public String getBio() {
         return this.bio;
     }
 
-    public void setBio(Optional<String> bio) {
+    public void setBio(String bio) {
         this.bio = bio;
     }
 
-    public Optional<String> getImage() {
+    public String getImage() {
         return this.image;
     }
 
-    public void setImage(Optional<String> image) {
+    public void setImage(String image) {
         this.image = image;
     }
 }
