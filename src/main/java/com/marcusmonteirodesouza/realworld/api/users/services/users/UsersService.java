@@ -8,6 +8,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import java.lang.invoke.MethodHandles;
 import org.apache.commons.validator.routines.EmailValidator;
+import org.apache.commons.validator.routines.UrlValidator;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.admin.client.Keycloak;
@@ -65,6 +66,8 @@ public class UsersService {
 
     public User createUser(String username, String email, String password)
             throws AlreadyExistsException {
+        logger.info("Creating User. Username: " + username + ", email: " + email);
+
         validateUsername(username);
 
         validateEmail(email);
@@ -75,8 +78,6 @@ public class UsersService {
         userRepresentation.setUsername(username);
         userRepresentation.setEmail(email);
         userRepresentation.setEnabled(true);
-
-        logger.info("Creating user. Username: " + username + ", email: " + email);
 
         var createUserResponse = usersResource.create(userRepresentation);
 
@@ -163,7 +164,22 @@ public class UsersService {
         }
     }
 
-    public Optional<User> updateUser(String userId, UserUpdate userUpdate) {
+    public Optional<User> updateUser(String userId, UserUpdate userUpdate)
+            throws AlreadyExistsException {
+        logger.info(
+                "Updating User: "
+                        + userId
+                        + ". Username: "
+                        + userUpdate.getUsername()
+                        + ", Email: "
+                        + userUpdate.getEmail()
+                        + ", Bio: "
+                        + userUpdate.getBio()
+                        + ", Image: "
+                        + userUpdate.getImage()
+                        + ", Updating Password: "
+                        + userUpdate.getPassword().isPresent());
+
         var usersResource = keycloakAdminInstance.realm(keycloakRealm).users();
 
         var userResource = usersResource.get(userId);
@@ -171,11 +187,21 @@ public class UsersService {
         var userRepresentation = userResource.toRepresentation();
 
         if (userUpdate.getUsername().isPresent()) {
-            userRepresentation.setUsername(userUpdate.getUsername().get());
+            var username = userUpdate.getUsername().get();
+
+            if (!username.equals(userRepresentation.getUsername())) {
+                validateUsername(username);
+                userRepresentation.setUsername(username);
+            }
         }
 
         if (userUpdate.getEmail().isPresent()) {
-            userRepresentation.setEmail(userUpdate.getEmail().get());
+            var email = userUpdate.getEmail().get();
+
+            if (!email.equals(userRepresentation.getEmail())) {
+                validateEmail(email);
+                userRepresentation.setEmail(email);
+            }
         }
 
         if (userUpdate.getBio().isPresent()) {
@@ -183,22 +209,10 @@ public class UsersService {
         }
 
         if (userUpdate.getImage().isPresent()) {
-            userRepresentation.singleAttribute("image", userUpdate.getImage().get());
+            var image = userUpdate.getImage().get();
+            validateImage(image);
+            userRepresentation.singleAttribute("image", image);
         }
-
-        logger.info(
-                "Updating User '"
-                        + userId
-                        + "'. Username: "
-                        + userRepresentation.getUsername()
-                        + ", Email: "
-                        + userRepresentation.getEmail()
-                        + ", Bio: "
-                        + userRepresentation.firstAttribute("bio")
-                        + ", Image: "
-                        + userRepresentation.firstAttribute("image")
-                        + ", Updating Password: "
-                        + userUpdate.getPassword().isPresent());
 
         userResource.update(userRepresentation);
 
@@ -235,6 +249,12 @@ public class UsersService {
         var usersByEmail = usersResource.searchByEmail(email, true);
         if (!usersByEmail.isEmpty()) {
             throw new AlreadyExistsException("Email '" + email + "' is taken");
+        }
+    }
+
+    private void validateImage(String image) {
+        if (!UrlValidator.getInstance().isValid(image)) {
+            throw new IllegalArgumentException("Invalid image URL: " + image);
         }
     }
 

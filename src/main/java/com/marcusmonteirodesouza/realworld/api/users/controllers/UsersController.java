@@ -94,7 +94,8 @@ public class UsersController {
     @PutMapping("/user")
     public UserResponse updateUser(
             @RequestHeader(name = "Authorization") String authorizationHeader,
-            @RequestBody UpdateUserRequest request) {
+            @RequestBody UpdateUserRequest request)
+            throws AlreadyExistsException {
         var authentication = authenticationFacade.getAuthentication();
 
         var userId = authentication.getName();
