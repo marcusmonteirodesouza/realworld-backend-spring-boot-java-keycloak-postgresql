@@ -107,6 +107,18 @@ public class UsersService {
                 Optional.absent());
     }
 
+    public User getUserById(String userId) {
+        var usersResource = keycloakAdminInstance.realm(keycloakRealm).users();
+
+        var userRepresentation = usersResource.get(userId).toRepresentation();
+
+        return new User(
+                userRepresentation.getEmail(),
+                userRepresentation.getUsername(),
+                Optional.fromNullable(userRepresentation.firstAttribute("bio")),
+                Optional.fromNullable(userRepresentation.firstAttribute("image")));
+    }
+
     public User getUserByEmail(String email) {
         var usersResource = keycloakAdminInstance.realm(keycloakRealm).users();
 
@@ -114,6 +126,24 @@ public class UsersService {
 
         if (usersByEmail.isEmpty()) {
             throw new NotFoundException("User with email '" + email + "' not found");
+        }
+
+        var userRepresentation = usersByEmail.getFirst();
+
+        return new User(
+                userRepresentation.getEmail(),
+                userRepresentation.getUsername(),
+                Optional.fromNullable(userRepresentation.firstAttribute("bio")),
+                Optional.fromNullable(userRepresentation.firstAttribute("image")));
+    }
+
+    public User getUserByUsername(String username) {
+        var usersResource = keycloakAdminInstance.realm(keycloakRealm).users();
+
+        var usersByEmail = usersResource.searchByUsername(username, true);
+
+        if (usersByEmail.isEmpty()) {
+            throw new NotFoundException("User with username '" + username + "' not found");
         }
 
         var userRepresentation = usersByEmail.getFirst();
