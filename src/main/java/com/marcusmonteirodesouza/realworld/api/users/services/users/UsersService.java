@@ -1,13 +1,14 @@
-package com.marcusmonteirodesouza.realworld.api.users.services;
+package com.marcusmonteirodesouza.realworld.api.users.services.users;
 
 import com.google.common.base.Optional;
 import com.marcusmonteirodesouza.realworld.api.exceptions.AlreadyExistsException;
 import com.marcusmonteirodesouza.realworld.api.users.models.User;
+import com.marcusmonteirodesouza.realworld.api.users.services.users.parameterobjects.UserUpdate;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import jakarta.ws.rs.NotFoundException;
 import java.lang.invoke.MethodHandles;
 import org.apache.commons.validator.routines.EmailValidator;
+import org.apache.commons.validator.routines.UrlValidator;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.admin.client.Keycloak;
@@ -46,12 +47,6 @@ public class UsersService {
 
     @PostConstruct
     public void initKeycloak() {
-        logger.info(keycloakServerUrl);
-        logger.info(keycloakRealm);
-        logger.info(keycloakClientId);
-        logger.info(keycloakAdminUsername);
-        logger.info(keycloakAdminPassword);
-
         keycloakAdminInstance =
                 KeycloakBuilder.builder()
                         .serverUrl(keycloakServerUrl)
@@ -71,6 +66,8 @@ public class UsersService {
 
     public User createUser(String username, String email, String password)
             throws AlreadyExistsException {
+        logger.info("Creating User. Username: " + username + ", email: " + email);
+
         validateUsername(username);
 
         validateEmail(email);
@@ -82,19 +79,11 @@ public class UsersService {
         userRepresentation.setEmail(email);
         userRepresentation.setEnabled(true);
 
-        logger.info("Creating user. Username: " + username + ", email: " + email);
-
         var createUserResponse = usersResource.create(userRepresentation);
-
-        logger.info("User '" + username + "' created!");
 
         var userId = CreatedResponseUtil.getCreatedId(createUserResponse);
 
-        var passwordCredentialRepresentation = new CredentialRepresentation();
-
-        passwordCredentialRepresentation.setTemporary(false);
-        passwordCredentialRepresentation.setType(CredentialRepresentation.PASSWORD);
-        passwordCredentialRepresentation.setValue(password);
+        var passwordCredentialRepresentation = makePasswordCredentialRepresentation(password);
 
         var userResource = usersResource.get(userId);
 
@@ -107,52 +96,55 @@ public class UsersService {
                 Optional.absent());
     }
 
-    public User getUserById(String userId) {
+    public Optional<User> getUserById(String userId) {
         var usersResource = keycloakAdminInstance.realm(keycloakRealm).users();
 
         var userRepresentation = usersResource.get(userId).toRepresentation();
 
-        return new User(
-                userRepresentation.getEmail(),
-                userRepresentation.getUsername(),
-                Optional.fromNullable(userRepresentation.firstAttribute("bio")),
-                Optional.fromNullable(userRepresentation.firstAttribute("image")));
+        return Optional.of(
+                new User(
+                        userRepresentation.getEmail(),
+                        userRepresentation.getUsername(),
+                        Optional.fromNullable(userRepresentation.firstAttribute("bio")),
+                        Optional.fromNullable(userRepresentation.firstAttribute("image"))));
     }
 
-    public User getUserByEmail(String email) {
+    public Optional<User> getUserByEmail(String email) {
         var usersResource = keycloakAdminInstance.realm(keycloakRealm).users();
 
         var usersByEmail = usersResource.searchByEmail(email, true);
 
         if (usersByEmail.isEmpty()) {
-            throw new NotFoundException("User with email '" + email + "' not found");
+            return Optional.absent();
         }
 
         var userRepresentation = usersByEmail.getFirst();
 
-        return new User(
-                userRepresentation.getEmail(),
-                userRepresentation.getUsername(),
-                Optional.fromNullable(userRepresentation.firstAttribute("bio")),
-                Optional.fromNullable(userRepresentation.firstAttribute("image")));
+        return Optional.of(
+                new User(
+                        userRepresentation.getEmail(),
+                        userRepresentation.getUsername(),
+                        Optional.fromNullable(userRepresentation.firstAttribute("bio")),
+                        Optional.fromNullable(userRepresentation.firstAttribute("image"))));
     }
 
-    public User getUserByUsername(String username) {
+    public Optional<User> getUserByUsername(String username) {
         var usersResource = keycloakAdminInstance.realm(keycloakRealm).users();
 
         var usersByEmail = usersResource.searchByUsername(username, true);
 
         if (usersByEmail.isEmpty()) {
-            throw new NotFoundException("User with username '" + username + "' not found");
+            return Optional.absent();
         }
 
         var userRepresentation = usersByEmail.getFirst();
 
-        return new User(
-                userRepresentation.getEmail(),
-                userRepresentation.getUsername(),
-                Optional.fromNullable(userRepresentation.firstAttribute("bio")),
-                Optional.fromNullable(userRepresentation.firstAttribute("image")));
+        return Optional.of(
+                new User(
+                        userRepresentation.getEmail(),
+                        userRepresentation.getUsername(),
+                        Optional.fromNullable(userRepresentation.firstAttribute("bio")),
+                        Optional.fromNullable(userRepresentation.firstAttribute("image"))));
     }
 
     public String getToken(String username, String password) {
@@ -170,6 +162,72 @@ public class UsersService {
         } finally {
             keycloakInstance.close();
         }
+    }
+
+    public Optional<User> updateUser(String userId, UserUpdate userUpdate)
+            throws AlreadyExistsException {
+        logger.info(
+                "Updating User: "
+                        + userId
+                        + ". Username: "
+                        + userUpdate.getUsername()
+                        + ", Email: "
+                        + userUpdate.getEmail()
+                        + ", Bio: "
+                        + userUpdate.getBio()
+                        + ", Image: "
+                        + userUpdate.getImage()
+                        + ", Updating Password: "
+                        + userUpdate.getPassword().isPresent());
+
+        var usersResource = keycloakAdminInstance.realm(keycloakRealm).users();
+
+        var userResource = usersResource.get(userId);
+
+        var userRepresentation = userResource.toRepresentation();
+
+        if (userUpdate.getUsername().isPresent()) {
+            var username = userUpdate.getUsername().get();
+
+            if (!username.equals(userRepresentation.getUsername())) {
+                validateUsername(username);
+                userRepresentation.setUsername(username);
+            }
+        }
+
+        if (userUpdate.getEmail().isPresent()) {
+            var email = userUpdate.getEmail().get();
+
+            if (!email.equals(userRepresentation.getEmail())) {
+                validateEmail(email);
+                userRepresentation.setEmail(email);
+            }
+        }
+
+        if (userUpdate.getBio().isPresent()) {
+            userRepresentation.singleAttribute("bio", userUpdate.getBio().get());
+        }
+
+        if (userUpdate.getImage().isPresent()) {
+            var image = userUpdate.getImage().get();
+            validateImage(image);
+            userRepresentation.singleAttribute("image", image);
+        }
+
+        userResource.update(userRepresentation);
+
+        if (userUpdate.getPassword().isPresent()) {
+            var passwordCredentialRepresentation =
+                    makePasswordCredentialRepresentation(userUpdate.getPassword().get());
+            userResource.resetPassword(passwordCredentialRepresentation);
+        }
+
+        return Optional.of(
+                new User(
+                        userRepresentation.getEmail(),
+                        userRepresentation.getUsername(),
+                        Optional.fromNullable(userRepresentation.firstAttribute("bio")),
+                        Optional.fromNullable(userRepresentation.firstAttribute("image"))));
     }
 
     private void validateUsername(String username) throws AlreadyExistsException {
@@ -192,5 +250,21 @@ public class UsersService {
         if (!usersByEmail.isEmpty()) {
             throw new AlreadyExistsException("Email '" + email + "' is taken");
         }
+    }
+
+    private void validateImage(String image) {
+        if (!UrlValidator.getInstance().isValid(image)) {
+            throw new IllegalArgumentException("Invalid image URL: " + image);
+        }
+    }
+
+    private CredentialRepresentation makePasswordCredentialRepresentation(String password) {
+        var passwordCredentialRepresentation = new CredentialRepresentation();
+
+        passwordCredentialRepresentation.setTemporary(false);
+        passwordCredentialRepresentation.setType(CredentialRepresentation.PASSWORD);
+        passwordCredentialRepresentation.setValue(password);
+
+        return passwordCredentialRepresentation;
     }
 }

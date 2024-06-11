@@ -9,7 +9,7 @@ public class RegisterUserRequest {
         this.user = user;
     }
 
-    public static class RegisterUserRequestUser {
+    public static final class RegisterUserRequestUser {
         public String username;
         public String email;
         public String password;
