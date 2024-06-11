@@ -6,21 +6,25 @@ import com.marcusmonteirodesouza.realworld.api.users.models.User;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.ws.rs.NotFoundException;
+import java.lang.invoke.MethodHandles;
 import org.apache.commons.validator.routines.EmailValidator;
+import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UsersService {
-    private Keycloak keycloakAdminInstance;
+    private final Logger logger =
+            LoggerFactory.getLogger(MethodHandles.lookup().lookupClass().getName());
 
-    @Value("${keycloak.admin-client-id}")
-    private String keycloakAdminClientId;
+    private Keycloak keycloakAdminInstance;
 
     @Value("${keycloak.admin-password}")
     private String keycloakAdminPassword;
@@ -28,26 +32,33 @@ public class UsersService {
     @Value("${keycloak.admin-username}")
     private String keycloakAdminUsername;
 
-    @Value("${keycloak.external-client-id}")
-    private String keycloakExternalClientId;
+    @Value("${keycloak.client-id}")
+    private String keycloakClientId;
 
-    @Value("${keycloak.external-client-secret}")
-    private String keycloakExternalClientSecret;
-
-    @Value("${keycloak.server-url}")
-    private String keycloakServerUrl;
+    @Value("${keycloak.client-secret}")
+    private String keycloakClientSecret;
 
     @Value("${keycloak.realm}")
     private String keycloakRealm;
 
+    @Value("${keycloak.server-url}")
+    private String keycloakServerUrl;
+
     @PostConstruct
     public void initKeycloak() {
+        logger.info(keycloakServerUrl);
+        logger.info(keycloakRealm);
+        logger.info(keycloakClientId);
+        logger.info(keycloakAdminUsername);
+        logger.info(keycloakAdminPassword);
+
         keycloakAdminInstance =
                 KeycloakBuilder.builder()
                         .serverUrl(keycloakServerUrl)
-                        .realm("master")
-                        .clientId(keycloakAdminClientId)
-                        .grantType("password")
+                        .realm(keycloakRealm)
+                        .clientId(keycloakClientId)
+                        .clientSecret(keycloakClientSecret)
+                        .grantType(OAuth2Constants.PASSWORD)
                         .username(keycloakAdminUsername)
                         .password(keycloakAdminPassword)
                         .build();
@@ -71,7 +82,11 @@ public class UsersService {
         userRepresentation.setEmail(email);
         userRepresentation.setEnabled(true);
 
+        logger.info("Creating user. Username: " + username + ", email: " + email);
+
         var createUserResponse = usersResource.create(userRepresentation);
+
+        logger.info("User '" + username + "' created!");
 
         var userId = CreatedResponseUtil.getCreatedId(createUserResponse);
 
@@ -86,7 +101,22 @@ public class UsersService {
         userResource.resetPassword(passwordCredentialRepresentation);
 
         return new User(
-                userRepresentation.getEmail(), userRepresentation.getUsername(), null, null);
+                userRepresentation.getEmail(),
+                userRepresentation.getUsername(),
+                Optional.absent(),
+                Optional.absent());
+    }
+
+    public User getUserById(String userId) {
+        var usersResource = keycloakAdminInstance.realm(keycloakRealm).users();
+
+        var userRepresentation = usersResource.get(userId).toRepresentation();
+
+        return new User(
+                userRepresentation.getEmail(),
+                userRepresentation.getUsername(),
+                Optional.fromNullable(userRepresentation.firstAttribute("bio")),
+                Optional.fromNullable(userRepresentation.firstAttribute("image")));
     }
 
     public User getUserByEmail(String email) {
@@ -107,6 +137,24 @@ public class UsersService {
                 Optional.fromNullable(userRepresentation.firstAttribute("image")));
     }
 
+    public User getUserByUsername(String username) {
+        var usersResource = keycloakAdminInstance.realm(keycloakRealm).users();
+
+        var usersByEmail = usersResource.searchByUsername(username, true);
+
+        if (usersByEmail.isEmpty()) {
+            throw new NotFoundException("User with username '" + username + "' not found");
+        }
+
+        var userRepresentation = usersByEmail.getFirst();
+
+        return new User(
+                userRepresentation.getEmail(),
+                userRepresentation.getUsername(),
+                Optional.fromNullable(userRepresentation.firstAttribute("bio")),
+                Optional.fromNullable(userRepresentation.firstAttribute("image")));
+    }
+
     public String getToken(String username, String password) {
         var keycloakInstance =
                 Keycloak.getInstance(
@@ -114,11 +162,11 @@ public class UsersService {
                         keycloakRealm,
                         username,
                         password,
-                        keycloakExternalClientId,
-                        keycloakExternalClientSecret);
+                        keycloakClientId,
+                        keycloakClientSecret);
 
         try {
-            return keycloakAdminInstance.tokenManager().grantToken().getToken();
+            return keycloakInstance.tokenManager().grantToken().getToken();
         } finally {
             keycloakInstance.close();
         }

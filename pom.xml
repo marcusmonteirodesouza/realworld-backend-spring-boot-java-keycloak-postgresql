@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>3.3.0</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.marcusmonteirodesouza</groupId>
 	<artifactId>realworld</artifactId>
@@ -30,10 +31,11 @@
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-oauth2-client -->
+		<!--
+		https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-oauth2-resource-server -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-oauth2-client</artifactId>
+			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
 			<version>3.3.0</version>
 		</dependency>
 
@@ -70,7 +72,7 @@
 			<groupId>me.paulschwarz</groupId>
 			<artifactId>spring-dotenv</artifactId>
 			<version>4.0.0</version>
-		  </dependency>
+		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -101,37 +103,38 @@
 				<artifactId>spotless-maven-plugin</artifactId>
 				<version>2.43.0</version>
 				<configuration>
-				  <formats>
-					<!-- you can define as many formats as you want, each is independent -->
-					<format>
-					  <!-- define the files to apply to -->
-					  <includes>
-						<include>.gitattributes</include>
-						<include>.gitignore</include>
-					  </includes>
-					  <!-- define the steps to apply to those files -->
-					  <trimTrailingWhitespace/>
-					  <endWithNewline/>
-					  <indent>
-						<tabs>true</tabs>
-						<spacesPerTab>4</spacesPerTab>
-					  </indent>
-					</format>
-				  </formats>
-				  <!-- define a language-specific format -->
-				  <java>
-					<!-- no need to specify files, inferred automatically, but you can if you want -->
-			  
-					<!-- apply a specific flavor of google-java-format and reflow long strings -->
-					<googleJavaFormat>
-					  <version>1.22.0</version>
-					  <style>AOSP</style>
-					  <reflowLongStrings>true</reflowLongStrings>
-					  <formatJavadoc>false</formatJavadoc>
-					</googleJavaFormat>
-				  </java>
+					<formats>
+						<!-- you can define as many formats as you want, each is independent -->
+						<format>
+							<!-- define the files to apply to -->
+							<includes>
+								<include>.gitattributes</include>
+								<include>.gitignore</include>
+							</includes>
+							<!-- define the steps to apply to those files -->
+							<trimTrailingWhitespace />
+							<endWithNewline />
+							<indent>
+								<tabs>true</tabs>
+								<spacesPerTab>4</spacesPerTab>
+							</indent>
+						</format>
+					</formats>
+					<!-- define a language-specific format -->
+					<java>
+						<!-- no need to specify files, inferred automatically, but you can if you
+						want -->
+
+						<!-- apply a specific flavor of google-java-format and reflow long strings -->
+						<googleJavaFormat>
+							<version>1.22.0</version>
+							<style>AOSP</style>
+							<reflowLongStrings>true</reflowLongStrings>
+							<formatJavadoc>false</formatJavadoc>
+						</googleJavaFormat>
+					</java>
 				</configuration>
-			  </plugin>
+			</plugin>
 		</plugins>
 	</build>
 
