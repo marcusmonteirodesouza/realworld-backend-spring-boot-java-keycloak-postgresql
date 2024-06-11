@@ -1,11 +1,11 @@
-package com.marcusmonteirodesouza.realworld.api.users.services;
+package com.marcusmonteirodesouza.realworld.api.users.services.users;
 
 import com.google.common.base.Optional;
 import com.marcusmonteirodesouza.realworld.api.exceptions.AlreadyExistsException;
 import com.marcusmonteirodesouza.realworld.api.users.models.User;
+import com.marcusmonteirodesouza.realworld.api.users.services.users.parameterobjects.UserUpdate;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import jakarta.ws.rs.NotFoundException;
 import java.lang.invoke.MethodHandles;
 import org.apache.commons.validator.routines.EmailValidator;
 import org.keycloak.OAuth2Constants;
@@ -46,12 +46,6 @@ public class UsersService {
 
     @PostConstruct
     public void initKeycloak() {
-        logger.info(keycloakServerUrl);
-        logger.info(keycloakRealm);
-        logger.info(keycloakClientId);
-        logger.info(keycloakAdminUsername);
-        logger.info(keycloakAdminPassword);
-
         keycloakAdminInstance =
                 KeycloakBuilder.builder()
                         .serverUrl(keycloakServerUrl)
@@ -86,15 +80,9 @@ public class UsersService {
 
         var createUserResponse = usersResource.create(userRepresentation);
 
-        logger.info("User '" + username + "' created!");
-
         var userId = CreatedResponseUtil.getCreatedId(createUserResponse);
 
-        var passwordCredentialRepresentation = new CredentialRepresentation();
-
-        passwordCredentialRepresentation.setTemporary(false);
-        passwordCredentialRepresentation.setType(CredentialRepresentation.PASSWORD);
-        passwordCredentialRepresentation.setValue(password);
+        var passwordCredentialRepresentation = makePasswordCredentialRepresentation(password);
 
         var userResource = usersResource.get(userId);
 
@@ -107,52 +95,55 @@ public class UsersService {
                 Optional.absent());
     }
 
-    public User getUserById(String userId) {
+    public Optional<User> getUserById(String userId) {
         var usersResource = keycloakAdminInstance.realm(keycloakRealm).users();
 
         var userRepresentation = usersResource.get(userId).toRepresentation();
 
-        return new User(
-                userRepresentation.getEmail(),
-                userRepresentation.getUsername(),
-                Optional.fromNullable(userRepresentation.firstAttribute("bio")),
-                Optional.fromNullable(userRepresentation.firstAttribute("image")));
+        return Optional.of(
+                new User(
+                        userRepresentation.getEmail(),
+                        userRepresentation.getUsername(),
+                        Optional.fromNullable(userRepresentation.firstAttribute("bio")),
+                        Optional.fromNullable(userRepresentation.firstAttribute("image"))));
     }
 
-    public User getUserByEmail(String email) {
+    public Optional<User> getUserByEmail(String email) {
         var usersResource = keycloakAdminInstance.realm(keycloakRealm).users();
 
         var usersByEmail = usersResource.searchByEmail(email, true);
 
         if (usersByEmail.isEmpty()) {
-            throw new NotFoundException("User with email '" + email + "' not found");
+            return Optional.absent();
         }
 
         var userRepresentation = usersByEmail.getFirst();
 
-        return new User(
-                userRepresentation.getEmail(),
-                userRepresentation.getUsername(),
-                Optional.fromNullable(userRepresentation.firstAttribute("bio")),
-                Optional.fromNullable(userRepresentation.firstAttribute("image")));
+        return Optional.of(
+                new User(
+                        userRepresentation.getEmail(),
+                        userRepresentation.getUsername(),
+                        Optional.fromNullable(userRepresentation.firstAttribute("bio")),
+                        Optional.fromNullable(userRepresentation.firstAttribute("image"))));
     }
 
-    public User getUserByUsername(String username) {
+    public Optional<User> getUserByUsername(String username) {
         var usersResource = keycloakAdminInstance.realm(keycloakRealm).users();
 
         var usersByEmail = usersResource.searchByUsername(username, true);
 
         if (usersByEmail.isEmpty()) {
-            throw new NotFoundException("User with username '" + username + "' not found");
+            return Optional.absent();
         }
 
         var userRepresentation = usersByEmail.getFirst();
 
-        return new User(
-                userRepresentation.getEmail(),
-                userRepresentation.getUsername(),
-                Optional.fromNullable(userRepresentation.firstAttribute("bio")),
-                Optional.fromNullable(userRepresentation.firstAttribute("image")));
+        return Optional.of(
+                new User(
+                        userRepresentation.getEmail(),
+                        userRepresentation.getUsername(),
+                        Optional.fromNullable(userRepresentation.firstAttribute("bio")),
+                        Optional.fromNullable(userRepresentation.firstAttribute("image"))));
     }
 
     public String getToken(String username, String password) {
@@ -170,6 +161,59 @@ public class UsersService {
         } finally {
             keycloakInstance.close();
         }
+    }
+
+    public Optional<User> updateUser(String userId, UserUpdate userUpdate) {
+        var usersResource = keycloakAdminInstance.realm(keycloakRealm).users();
+
+        var userResource = usersResource.get(userId);
+
+        var userRepresentation = userResource.toRepresentation();
+
+        if (userUpdate.getUsername().isPresent()) {
+            userRepresentation.setUsername(userUpdate.getUsername().get());
+        }
+
+        if (userUpdate.getEmail().isPresent()) {
+            userRepresentation.setEmail(userUpdate.getEmail().get());
+        }
+
+        if (userUpdate.getBio().isPresent()) {
+            userRepresentation.singleAttribute("bio", userUpdate.getBio().get());
+        }
+
+        if (userUpdate.getImage().isPresent()) {
+            userRepresentation.singleAttribute("image", userUpdate.getImage().get());
+        }
+
+        logger.info(
+                "Updating User '"
+                        + userId
+                        + "'. Username: "
+                        + userRepresentation.getUsername()
+                        + ", Email: "
+                        + userRepresentation.getEmail()
+                        + ", Bio: "
+                        + userRepresentation.firstAttribute("bio")
+                        + ", Image: "
+                        + userRepresentation.firstAttribute("image")
+                        + ", Updating Password: "
+                        + userUpdate.getPassword().isPresent());
+
+        userResource.update(userRepresentation);
+
+        if (userUpdate.getPassword().isPresent()) {
+            var passwordCredentialRepresentation =
+                    makePasswordCredentialRepresentation(userUpdate.getPassword().get());
+            userResource.resetPassword(passwordCredentialRepresentation);
+        }
+
+        return Optional.of(
+                new User(
+                        userRepresentation.getEmail(),
+                        userRepresentation.getUsername(),
+                        Optional.fromNullable(userRepresentation.firstAttribute("bio")),
+                        Optional.fromNullable(userRepresentation.firstAttribute("image"))));
     }
 
     private void validateUsername(String username) throws AlreadyExistsException {
@@ -192,5 +236,15 @@ public class UsersService {
         if (!usersByEmail.isEmpty()) {
             throw new AlreadyExistsException("Email '" + email + "' is taken");
         }
+    }
+
+    private CredentialRepresentation makePasswordCredentialRepresentation(String password) {
+        var passwordCredentialRepresentation = new CredentialRepresentation();
+
+        passwordCredentialRepresentation.setTemporary(false);
+        passwordCredentialRepresentation.setType(CredentialRepresentation.PASSWORD);
+        passwordCredentialRepresentation.setValue(password);
+
+        return passwordCredentialRepresentation;
     }
 }
