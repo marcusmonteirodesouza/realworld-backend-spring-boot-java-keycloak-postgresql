@@ -1,6 +1,6 @@
 package com.marcusmonteirodesouza.realworld.api.users.controllers.dto;
 
-public class UpdateUserRequest {
+public final class UpdateUserRequest {
     public UpdateUserRequestUser user;
 
     public UpdateUserRequest() {}

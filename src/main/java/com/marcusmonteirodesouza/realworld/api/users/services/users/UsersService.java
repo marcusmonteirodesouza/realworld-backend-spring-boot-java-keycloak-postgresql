@@ -90,6 +90,7 @@ public class UsersService {
         userResource.resetPassword(passwordCredentialRepresentation);
 
         return new User(
+                userRepresentation.getId(),
                 userRepresentation.getEmail(),
                 userRepresentation.getUsername(),
                 Optional.absent(),
@@ -103,6 +104,7 @@ public class UsersService {
 
         return Optional.of(
                 new User(
+                        userRepresentation.getId(),
                         userRepresentation.getEmail(),
                         userRepresentation.getUsername(),
                         Optional.fromNullable(userRepresentation.firstAttribute("bio")),
@@ -122,6 +124,7 @@ public class UsersService {
 
         return Optional.of(
                 new User(
+                        userRepresentation.getId(),
                         userRepresentation.getEmail(),
                         userRepresentation.getUsername(),
                         Optional.fromNullable(userRepresentation.firstAttribute("bio")),
@@ -141,6 +144,7 @@ public class UsersService {
 
         return Optional.of(
                 new User(
+                        userRepresentation.getId(),
                         userRepresentation.getEmail(),
                         userRepresentation.getUsername(),
                         Optional.fromNullable(userRepresentation.firstAttribute("bio")),
@@ -224,6 +228,7 @@ public class UsersService {
 
         return Optional.of(
                 new User(
+                        userRepresentation.getId(),
                         userRepresentation.getEmail(),
                         userRepresentation.getUsername(),
                         Optional.fromNullable(userRepresentation.firstAttribute("bio")),
