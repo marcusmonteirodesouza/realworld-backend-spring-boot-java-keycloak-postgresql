@@ -1,19 +1,19 @@
 services:
-  # appdb:
-  #   image: "postgres:15"
-  #   ports:
-  #     - ${APP_DB_PORT}:${APP_DB_PORT}
-  #   environment:
-  #     - POSTGRES_USER=${APP_DB_USERNAME}
-  #     - POSTGRES_PASSWORD=${APP_DB_PASSWORD}
-  #     - POSTGRES_DB=${APP_DB}
-  #   volumes:
-  #     - ./appdb-data:/var/lib/postgresql/data
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "pg_isready"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
+  appdb:
+    image: "postgres:15"
+    ports:
+      - ${APP_DB_PORT}:${APP_DB_PORT}
+    environment:
+      - POSTGRES_USER=${APP_DB_USERNAME}
+      - POSTGRES_PASSWORD=${APP_DB_PASSWORD}
+      - POSTGRES_DB=${APP_DB}
+    volumes:
+      - ./appdb-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
   keycloak:
     image: "quay.io/keycloak/keycloak"
     command: ["start-dev"]

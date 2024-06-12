@@ -1,6 +1,6 @@
 package com.marcusmonteirodesouza.realworld.api.users.controllers.dto;
 
-public class LoginRequest {
+public final class LoginRequest {
     public LoginRequestUser user;
 
     public LoginRequest() {}

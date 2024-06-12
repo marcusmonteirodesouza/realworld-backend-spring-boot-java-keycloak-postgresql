@@ -1,6 +1,6 @@
 package com.marcusmonteirodesouza.realworld.api.users.controllers.dto;
 
-public class RegisterUserRequest {
+public final class RegisterUserRequest {
     public RegisterUserRequestUser user;
 
     public RegisterUserRequest() {}

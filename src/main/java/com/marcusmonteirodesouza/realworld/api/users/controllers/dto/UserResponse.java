@@ -1,6 +1,6 @@
 package com.marcusmonteirodesouza.realworld.api.users.controllers.dto;
 
-public class UserResponse {
+public final class UserResponse {
     private final UserResponseUser user;
 
     public UserResponse(UserResponseUser user) {
