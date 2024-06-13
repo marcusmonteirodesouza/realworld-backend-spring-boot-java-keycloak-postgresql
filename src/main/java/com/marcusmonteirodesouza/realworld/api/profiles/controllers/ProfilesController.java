@@ -5,7 +5,9 @@ import com.marcusmonteirodesouza.realworld.api.profiles.controllers.dto.ProfileR
 import com.marcusmonteirodesouza.realworld.api.profiles.controllers.dto.ProfileResponse.ProfileResponseProfile;
 import com.marcusmonteirodesouza.realworld.api.profiles.services.ProfilesService;
 import com.marcusmonteirodesouza.realworld.api.users.services.users.UsersService;
+import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,6 +31,7 @@ public class ProfilesController {
     }
 
     @PostMapping("/{username}/follow")
+    @Transactional
     public ProfileResponse followUser(@PathVariable String username) {
         var user = usersService.getUserByUsername(username).orNull();
 
@@ -71,5 +74,26 @@ public class ProfilesController {
                         user.getBio().orNull(),
                         user.getImage().orNull(),
                         isFollowing));
+    }
+
+    @DeleteMapping("/{username}/follow")
+    @Transactional
+    public ProfileResponse unfollowUser(@PathVariable String username) {
+        var user = usersService.getUserByUsername(username).orNull();
+
+        if (user == null) {
+            throw new NotFoundException("Username '" + username + "' not found");
+        }
+
+        var authenticatedUserId = authenticationFacade.getAuthentication().getName();
+
+        profilesService.unfollowUser(authenticatedUserId, user.getId());
+
+        return new ProfileResponse(
+                new ProfileResponseProfile(
+                        user.getUsername(),
+                        user.getBio().orNull(),
+                        user.getImage().orNull(),
+                        false));
     }
 }

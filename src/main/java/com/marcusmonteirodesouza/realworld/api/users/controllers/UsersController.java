@@ -10,6 +10,7 @@ import com.marcusmonteirodesouza.realworld.api.users.controllers.dto.UserRespons
 import com.marcusmonteirodesouza.realworld.api.users.controllers.dto.UserResponse.UserResponseUser;
 import com.marcusmonteirodesouza.realworld.api.users.services.users.UsersService;
 import com.marcusmonteirodesouza.realworld.api.users.services.users.parameterobjects.UserUpdate;
+import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -92,6 +93,7 @@ public class UsersController {
     }
 
     @PutMapping("/user")
+    @Transactional
     public UserResponse updateUser(
             @RequestHeader(name = "Authorization") String authorizationHeader,
             @RequestBody UpdateUserRequest request)

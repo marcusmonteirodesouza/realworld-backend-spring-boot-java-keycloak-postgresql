@@ -48,6 +48,16 @@ public class ProfilesService {
         this.followsRepository.save(follow);
     }
 
+    public void unfollowUser(String followerId, String followedId) {
+        if (!isFollowing(followerId, followedId)) {
+            return;
+        }
+
+        logger.info("Deleting Follow. Follower: " + followerId + ", Followed: " + followedId);
+
+        followsRepository.deleteByFollowerIdAndFollowedId(followerId, followedId);
+    }
+
     public Boolean isFollowing(String followerId, String followedId) {
         return this.followsRepository.existsByFollowerIdAndFollowedId(followerId, followedId);
     }
