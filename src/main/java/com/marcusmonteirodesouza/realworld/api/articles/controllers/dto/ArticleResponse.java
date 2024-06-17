@@ -1,5 +1,6 @@
 package com.marcusmonteirodesouza.realworld.api.articles.controllers.dto;
 
+import com.google.common.base.Optional;
 import com.marcusmonteirodesouza.realworld.api.articles.models.Article;
 import com.marcusmonteirodesouza.realworld.api.profiles.models.Profile;
 import java.util.Collection;
@@ -8,8 +9,8 @@ import java.util.Date;
 public class ArticleResponse {
     private final ArticleResponseArticle article;
 
-    public ArticleResponse(String userId, Article article, Profile authorProfile) {
-        this.article = new ArticleResponseArticle(userId, article, authorProfile);
+    public ArticleResponse(Optional<String> maybeUserId, Article article, Profile authorProfile) {
+        this.article = new ArticleResponseArticle(maybeUserId, article, authorProfile);
     }
 
     public ArticleResponseArticle getArticle() {
@@ -28,7 +29,8 @@ public class ArticleResponse {
         private final Integer favoritesCount;
         private final ArticleResponseAuthor author;
 
-        public ArticleResponseArticle(String userId, Article article, Profile authorProfile) {
+        public ArticleResponseArticle(
+                Optional<String> maybeUserId, Article article, Profile authorProfile) {
             this.slug = article.getSlug();
             this.title = article.getTitle();
             this.description = article.getDescription();
@@ -37,10 +39,14 @@ public class ArticleResponse {
             this.createdAt = article.getCreatedAt();
             this.updatedAt = article.getUpdatedAt();
             this.favorited =
-                    article.getFavorites().stream()
-                            .filter(favorite -> favorite.getUserId().equals(userId))
-                            .findFirst()
-                            .isPresent();
+                    maybeUserId.isPresent()
+                            ? article.getFavorites().stream()
+                                    .filter(
+                                            favorite ->
+                                                    favorite.getUserId().equals(maybeUserId.get()))
+                                    .findFirst()
+                                    .isPresent()
+                            : false;
             this.favoritesCount = article.getFavorites().size();
             this.author =
                     new ArticleResponseAuthor(
