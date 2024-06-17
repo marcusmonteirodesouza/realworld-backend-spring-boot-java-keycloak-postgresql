@@ -1,13 +1,16 @@
 package com.marcusmonteirodesouza.realworld.api.articles.controllers.dto;
 
+import com.google.common.base.Optional;
+import com.marcusmonteirodesouza.realworld.api.articles.models.Article;
+import com.marcusmonteirodesouza.realworld.api.profiles.models.Profile;
 import java.util.Collection;
 import java.util.Date;
 
 public class ArticleResponse {
     private final ArticleResponseArticle article;
 
-    public ArticleResponse(ArticleResponseArticle article) {
-        this.article = article;
+    public ArticleResponse(Optional<String> maybeUserId, Article article, Profile authorProfile) {
+        this.article = new ArticleResponseArticle(maybeUserId, article, authorProfile);
     }
 
     public ArticleResponseArticle getArticle() {
@@ -27,26 +30,30 @@ public class ArticleResponse {
         private final ArticleResponseAuthor author;
 
         public ArticleResponseArticle(
-                String slug,
-                String title,
-                String description,
-                String body,
-                Collection<String> tagList,
-                Date createdAt,
-                Date updatedAt,
-                Boolean favorited,
-                Integer favoritesCount,
-                ArticleResponseAuthor author) {
-            this.slug = slug;
-            this.title = title;
-            this.description = description;
-            this.body = body;
-            this.tagList = tagList;
-            this.createdAt = createdAt;
-            this.updatedAt = updatedAt;
-            this.favorited = favorited;
-            this.favoritesCount = favoritesCount;
-            this.author = author;
+                Optional<String> maybeUserId, Article article, Profile authorProfile) {
+            this.slug = article.getSlug();
+            this.title = article.getTitle();
+            this.description = article.getDescription();
+            this.body = article.getBody();
+            this.tagList = article.getTagList().stream().map(tag -> tag.getValue()).toList();
+            this.createdAt = article.getCreatedAt();
+            this.updatedAt = article.getUpdatedAt();
+            this.favorited =
+                    maybeUserId.isPresent()
+                            ? article.getFavorites().stream()
+                                    .filter(
+                                            favorite ->
+                                                    favorite.getUserId().equals(maybeUserId.get()))
+                                    .findFirst()
+                                    .isPresent()
+                            : false;
+            this.favoritesCount = article.getFavorites().size();
+            this.author =
+                    new ArticleResponseAuthor(
+                            authorProfile.getUsername(),
+                            authorProfile.getBio().orNull(),
+                            authorProfile.getImage().orNull(),
+                            authorProfile.getFollowing());
         }
 
         public String getSlug() {

@@ -3,7 +3,6 @@ package com.marcusmonteirodesouza.realworld.api.profiles.controllers;
 import com.google.common.base.Optional;
 import com.marcusmonteirodesouza.realworld.api.authentication.IAuthenticationFacade;
 import com.marcusmonteirodesouza.realworld.api.profiles.controllers.dto.ProfileResponse;
-import com.marcusmonteirodesouza.realworld.api.profiles.controllers.dto.ProfileResponse.ProfileResponseProfile;
 import com.marcusmonteirodesouza.realworld.api.profiles.services.ProfilesService;
 import com.marcusmonteirodesouza.realworld.api.users.services.users.UsersService;
 import jakarta.transaction.Transactional;
@@ -46,12 +45,7 @@ public class ProfilesController {
 
         var profile = profilesService.getProfile(user.getId(), Optional.of(authenticatedUserId));
 
-        return new ProfileResponse(
-                new ProfileResponseProfile(
-                        profile.getUsername(),
-                        profile.getBio().orNull(),
-                        profile.getImage().orNull(),
-                        profile.getFollowing()));
+        return new ProfileResponse(profile);
     }
 
     @GetMapping("/{username}")
@@ -68,12 +62,7 @@ public class ProfilesController {
                 profilesService.getProfile(
                         user.getId(), Optional.fromNullable(authenticatedUserId));
 
-        return new ProfileResponse(
-                new ProfileResponseProfile(
-                        profile.getUsername(),
-                        profile.getBio().orNull(),
-                        profile.getImage().orNull(),
-                        profile.getFollowing()));
+        return new ProfileResponse(profile);
     }
 
     @DeleteMapping("/{username}/follow")
@@ -91,11 +80,6 @@ public class ProfilesController {
 
         var profile = profilesService.getProfile(user.getId(), Optional.of(authenticatedUserId));
 
-        return new ProfileResponse(
-                new ProfileResponseProfile(
-                        profile.getUsername(),
-                        profile.getBio().orNull(),
-                        profile.getImage().orNull(),
-                        profile.getFollowing()));
+        return new ProfileResponse(profile);
     }
 }

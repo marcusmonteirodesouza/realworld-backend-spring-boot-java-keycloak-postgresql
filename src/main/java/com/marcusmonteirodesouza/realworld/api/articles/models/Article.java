@@ -6,9 +6,11 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.NotBlank;
-import java.sql.Timestamp;
-import java.util.List;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
 import org.checkerframework.common.aliasing.qual.Unique;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -30,28 +32,19 @@ public class Article {
     @NotBlank private String body;
 
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    private List<Tag> tagList;
+    private Collection<Tag> tagList = new ArrayList<Tag>();
 
-    @CreationTimestamp private Timestamp createdAt;
+    @OneToMany(
+            mappedBy = "article",
+            cascade = {CascadeType.ALL},
+            orphanRemoval = true)
+    private Collection<Favorite> favorites = new ArrayList<Favorite>();
 
-    @UpdateTimestamp private Timestamp updatedAt;
+    @CreationTimestamp private Date createdAt;
+
+    @UpdateTimestamp private Date updatedAt;
 
     public Article() {}
-
-    public Article(
-            String authorId,
-            String slug,
-            String title,
-            String description,
-            String body,
-            List<Tag> tagList) {
-        this.authorId = authorId;
-        this.slug = slug;
-        this.title = title;
-        this.description = description;
-        this.body = body;
-        this.tagList = tagList;
-    }
 
     public String getId() {
         return id;
@@ -97,19 +90,41 @@ public class Article {
         this.body = body;
     }
 
-    public List<Tag> getTagList() {
+    public Collection<Tag> getTagList() {
         return tagList;
     }
 
-    public void setTagList(List<Tag> tagList) {
+    public void setTagList(Collection<Tag> tagList) {
         this.tagList = tagList;
     }
 
-    public Timestamp getCreatedAt() {
+    public Collection<Favorite> getFavorites() {
+        return favorites;
+    }
+
+    public void addFavorite(Favorite favorite) {
+        this.favorites.add(favorite);
+        favorite.setArticle(this);
+    }
+
+    public void removeFavorite(Favorite favorite) {
+        favorite.setArticle(null);
+        this.favorites.remove(favorite);
+    }
+
+    public Date getCreatedAt() {
         return createdAt;
     }
 
-    public Timestamp getUpdatedAt() {
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Date getUpdatedAt() {
         return updatedAt;
+    }
+
+    public void setUpdatedAt(Date updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

@@ -1,10 +1,12 @@
 package com.marcusmonteirodesouza.realworld.api.profiles.controllers.dto;
 
+import com.marcusmonteirodesouza.realworld.api.profiles.models.Profile;
+
 public final class ProfileResponse {
     private final ProfileResponseProfile profile;
 
-    public ProfileResponse(ProfileResponseProfile profile) {
-        this.profile = profile;
+    public ProfileResponse(Profile profile) {
+        this.profile = new ProfileResponseProfile(profile);
     }
 
     public ProfileResponseProfile getProfile() {
@@ -17,12 +19,11 @@ public final class ProfileResponse {
         private final String image;
         private final Boolean following;
 
-        public ProfileResponseProfile(
-                String username, String bio, String image, Boolean following) {
-            this.username = username;
-            this.bio = bio;
-            this.image = image;
-            this.following = following;
+        public ProfileResponseProfile(Profile profile) {
+            this.username = profile.getUsername();
+            this.bio = profile.getBio().orNull();
+            this.image = profile.getImage().orNull();
+            this.following = profile.getFollowing();
         }
 
         public String getUsername() {

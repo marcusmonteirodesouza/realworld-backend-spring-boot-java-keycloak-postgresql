@@ -4,14 +4,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.NotBlank;
 import java.sql.Timestamp;
 import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
-@Table(uniqueConstraints = {@UniqueConstraint(columnNames = {"userId", "articleId"})})
 public class Favorite {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -19,7 +17,7 @@ public class Favorite {
 
     @NotBlank private String userId;
 
-    @NotBlank private String articleId;
+    @ManyToOne() private Article article;
 
     @CreationTimestamp private Timestamp createdAt;
 
@@ -37,12 +35,12 @@ public class Favorite {
         this.userId = userId;
     }
 
-    public String getArticleId() {
-        return articleId;
+    public Article getArticle() {
+        return article;
     }
 
-    public void setArticleId(String articleId) {
-        this.articleId = articleId;
+    public void setArticle(Article article) {
+        this.article = article;
     }
 
     public Timestamp getCreatedAt() {

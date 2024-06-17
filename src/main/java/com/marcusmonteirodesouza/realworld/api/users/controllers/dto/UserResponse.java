@@ -1,10 +1,12 @@
 package com.marcusmonteirodesouza.realworld.api.users.controllers.dto;
 
+import com.marcusmonteirodesouza.realworld.api.users.models.User;
+
 public final class UserResponse {
     private final UserResponseUser user;
 
-    public UserResponse(UserResponseUser user) {
-        this.user = user;
+    public UserResponse(User user, String token) {
+        this.user = new UserResponseUser(user, token);
     }
 
     public UserResponseUser getUser() {
@@ -18,13 +20,12 @@ public final class UserResponse {
         private final String bio;
         private final String image;
 
-        public UserResponseUser(
-                String email, String username, String token, String bio, String image) {
-            this.email = email;
-            this.username = username;
+        public UserResponseUser(User user, String token) {
+            this.email = user.getEmail();
+            this.username = user.getUsername();
             this.token = token;
-            this.bio = bio;
-            this.image = image;
+            this.bio = user.getBio().orNull();
+            this.image = user.getImage().orNull();
         }
 
         public String getEmail() {
