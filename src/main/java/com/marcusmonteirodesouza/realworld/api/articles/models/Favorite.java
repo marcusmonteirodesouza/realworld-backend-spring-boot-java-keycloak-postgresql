@@ -23,6 +23,8 @@ public class Favorite {
 
     @CreationTimestamp private Timestamp createdAt;
 
+    public Favorite() {}
+
     public String getId() {
         return id;
     }

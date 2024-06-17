@@ -6,16 +6,14 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotBlank;
 import java.sql.Timestamp;
 import java.util.List;
+import org.checkerframework.common.aliasing.qual.Unique;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
-@Table(uniqueConstraints = {@UniqueConstraint(columnNames = {"authorId", "slug", "title"})})
 public class Article {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -23,7 +21,7 @@ public class Article {
 
     @NotBlank private String authorId;
 
-    @NotBlank private String slug;
+    @NotBlank @Unique private String slug;
 
     @NotBlank private String title;
 
@@ -37,6 +35,8 @@ public class Article {
     @CreationTimestamp private Timestamp createdAt;
 
     @UpdateTimestamp private Timestamp updatedAt;
+
+    public Article() {}
 
     public Article(
             String authorId,

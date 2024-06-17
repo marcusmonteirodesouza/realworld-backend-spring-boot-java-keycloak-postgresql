@@ -8,6 +8,7 @@ import com.marcusmonteirodesouza.realworld.api.articles.controllers.dto.CreateAr
 import com.marcusmonteirodesouza.realworld.api.articles.services.ArticlesService;
 import com.marcusmonteirodesouza.realworld.api.articles.services.parameterobjects.ArticleCreate;
 import com.marcusmonteirodesouza.realworld.api.authentication.IAuthenticationFacade;
+import com.marcusmonteirodesouza.realworld.api.exceptions.AlreadyExistsException;
 import com.marcusmonteirodesouza.realworld.api.profiles.services.ProfilesService;
 import jakarta.transaction.Transactional;
 import java.util.stream.Collectors;
@@ -34,7 +35,8 @@ public class ArticlesController {
 
     @PostMapping()
     @Transactional
-    public ArticleResponse createArticle(@RequestBody CreateArticleRequest request) {
+    public ArticleResponse createArticle(@RequestBody CreateArticleRequest request)
+            throws AlreadyExistsException {
         var authorId = authenticationFacade.getAuthentication().getName();
 
         var article =

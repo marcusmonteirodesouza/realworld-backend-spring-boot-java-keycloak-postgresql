@@ -19,6 +19,8 @@ public class Tag {
 
     @ManyToMany() private List<Article> articles;
 
+    public Tag() {}
+
     public Tag(String value) {
         this.value = value;
     }
