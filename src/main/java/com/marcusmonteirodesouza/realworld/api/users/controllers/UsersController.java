@@ -7,7 +7,6 @@ import com.marcusmonteirodesouza.realworld.api.users.controllers.dto.LoginReques
 import com.marcusmonteirodesouza.realworld.api.users.controllers.dto.RegisterUserRequest;
 import com.marcusmonteirodesouza.realworld.api.users.controllers.dto.UpdateUserRequest;
 import com.marcusmonteirodesouza.realworld.api.users.controllers.dto.UserResponse;
-import com.marcusmonteirodesouza.realworld.api.users.controllers.dto.UserResponse.UserResponseUser;
 import com.marcusmonteirodesouza.realworld.api.users.services.users.UsersService;
 import com.marcusmonteirodesouza.realworld.api.users.services.users.parameterobjects.UserUpdate;
 import jakarta.transaction.Transactional;
@@ -40,13 +39,7 @@ public class UsersController {
 
         var token = usersService.getToken(user.getUsername(), request.user.password);
 
-        return new UserResponse(
-                new UserResponseUser(
-                        user.getEmail(),
-                        user.getUsername(),
-                        token,
-                        user.getBio().orNull(),
-                        user.getImage().orNull()));
+        return new UserResponse(user, token);
     }
 
     @PostMapping("/users/login")
@@ -59,13 +52,7 @@ public class UsersController {
 
         var token = usersService.getToken(user.getUsername(), request.user.password);
 
-        return new UserResponse(
-                new UserResponseUser(
-                        user.getEmail(),
-                        user.getUsername(),
-                        token,
-                        user.getBio().orNull(),
-                        user.getImage().orNull()));
+        return new UserResponse(user, token);
     }
 
     @GetMapping("/user")
@@ -83,13 +70,7 @@ public class UsersController {
 
         var token = authorizationHeader.split(" ")[1];
 
-        return new UserResponse(
-                new UserResponseUser(
-                        user.getEmail(),
-                        user.getUsername(),
-                        token,
-                        user.getBio().orNull(),
-                        user.getImage().orNull()));
+        return new UserResponse(user, token);
     }
 
     @PutMapping("/user")
@@ -120,12 +101,6 @@ public class UsersController {
 
         var token = authorizationHeader.split(" ")[1];
 
-        return new UserResponse(
-                new UserResponseUser(
-                        user.getEmail(),
-                        user.getUsername(),
-                        token,
-                        user.getBio().orNull(),
-                        user.getImage().orNull()));
+        return new UserResponse(user, token);
     }
 }

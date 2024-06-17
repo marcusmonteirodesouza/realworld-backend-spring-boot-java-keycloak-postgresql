@@ -2,8 +2,6 @@ package com.marcusmonteirodesouza.realworld.api.articles.controllers;
 
 import com.google.common.base.Optional;
 import com.marcusmonteirodesouza.realworld.api.articles.controllers.dto.ArticleResponse;
-import com.marcusmonteirodesouza.realworld.api.articles.controllers.dto.ArticleResponse.ArticleResponseArticle;
-import com.marcusmonteirodesouza.realworld.api.articles.controllers.dto.ArticleResponse.ArticleResponseAuthor;
 import com.marcusmonteirodesouza.realworld.api.articles.controllers.dto.CreateArticleRequest;
 import com.marcusmonteirodesouza.realworld.api.articles.services.ArticlesService;
 import com.marcusmonteirodesouza.realworld.api.articles.services.parameterobjects.ArticleCreate;
@@ -11,7 +9,9 @@ import com.marcusmonteirodesouza.realworld.api.authentication.IAuthenticationFac
 import com.marcusmonteirodesouza.realworld.api.exceptions.AlreadyExistsException;
 import com.marcusmonteirodesouza.realworld.api.profiles.services.ProfilesService;
 import jakarta.transaction.Transactional;
-import java.util.stream.Collectors;
+import jakarta.ws.rs.NotFoundException;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,39 +37,55 @@ public class ArticlesController {
     @Transactional
     public ArticleResponse createArticle(@RequestBody CreateArticleRequest request)
             throws AlreadyExistsException {
-        var authorId = authenticationFacade.getAuthentication().getName();
+        var userId = authenticationFacade.getAuthentication().getName();
 
         var article =
                 articlesService.createArticle(
                         new ArticleCreate(
-                                authorId,
+                                userId,
                                 request.article.title,
                                 request.article.description,
                                 request.article.body,
                                 Optional.fromNullable(request.article.tagList)));
 
-        var tagList =
-                article.getTagList().stream()
-                        .map(tag -> tag.getValue())
-                        .collect(Collectors.toList());
+        var authorProfile = profilesService.getProfile(article.getAuthorId(), Optional.absent());
 
-        var authorProfile = profilesService.getProfile(authorId, Optional.absent());
+        return new ArticleResponse(userId, article, authorProfile);
+    }
 
-        return new ArticleResponse(
-                new ArticleResponseArticle(
-                        article.getSlug(),
-                        article.getTitle(),
-                        article.getDescription(),
-                        article.getBody(),
-                        tagList,
-                        article.getCreatedAt(),
-                        article.getUpdatedAt(),
-                        false,
-                        0,
-                        new ArticleResponseAuthor(
-                                authorProfile.getUsername(),
-                                authorProfile.getBio().orNull(),
-                                authorProfile.getImage().orNull(),
-                                authorProfile.getFollowing())));
+    @PostMapping("/{slug}/favorite")
+    @Transactional
+    public ArticleResponse favoriteArticle(@PathVariable String slug) {
+        var userId = authenticationFacade.getAuthentication().getName();
+
+        var article = articlesService.getArticleBySlug(slug).orNull();
+
+        if (article == null) {
+            throw new NotFoundException("Article with slug '" + slug + "' not found");
+        }
+
+        article = articlesService.favoriteArticle(userId, article.getId());
+
+        var authorProfile = profilesService.getProfile(article.getAuthorId(), Optional.of(userId));
+
+        return new ArticleResponse(userId, article, authorProfile);
+    }
+
+    @DeleteMapping("/{slug}/favorite")
+    @Transactional
+    public ArticleResponse unfavoriteArticle(@PathVariable String slug) {
+        var userId = authenticationFacade.getAuthentication().getName();
+
+        var article = articlesService.getArticleBySlug(slug).orNull();
+
+        if (article == null) {
+            throw new NotFoundException("Article with slug '" + slug + "' not found");
+        }
+
+        article = articlesService.unfavoriteArticle(userId, article.getId());
+
+        var authorProfile = profilesService.getProfile(article.getAuthorId(), Optional.of(userId));
+
+        return new ArticleResponse(userId, article, authorProfile);
     }
 }

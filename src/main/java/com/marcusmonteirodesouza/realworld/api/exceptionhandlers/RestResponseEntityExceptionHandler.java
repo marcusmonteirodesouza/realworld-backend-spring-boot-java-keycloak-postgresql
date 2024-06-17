@@ -2,6 +2,7 @@ package com.marcusmonteirodesouza.realworld.api.exceptionhandlers;
 
 import com.marcusmonteirodesouza.realworld.api.exceptionhandlers.dto.ErrorResponse;
 import com.marcusmonteirodesouza.realworld.api.exceptions.AlreadyExistsException;
+import com.marcusmonteirodesouza.realworld.api.exceptions.ForbiddenException;
 import jakarta.ws.rs.NotAuthorizedException;
 import jakarta.ws.rs.NotFoundException;
 import java.lang.invoke.MethodHandles;
@@ -31,6 +32,9 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
         if (ex instanceof AlreadyExistsException) {
             errorResponse = new ErrorResponse(new String[] {ex.getMessage()});
             statusCode = HttpStatus.CONFLICT;
+        } else if (ex instanceof ForbiddenException) {
+            errorResponse = new ErrorResponse(new String[] {ex.getMessage()});
+            statusCode = HttpStatus.FORBIDDEN;
         } else if (ex instanceof IllegalArgumentException) {
             errorResponse = new ErrorResponse(new String[] {ex.getMessage()});
             statusCode = HttpStatus.UNPROCESSABLE_ENTITY;
