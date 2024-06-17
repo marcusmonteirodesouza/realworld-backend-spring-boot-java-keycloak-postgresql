@@ -1,6 +1,8 @@
 package com.marcusmonteirodesouza.realworld.api.profiles.services;
 
+import com.google.common.base.Optional;
 import com.marcusmonteirodesouza.realworld.api.profiles.models.Follow;
+import com.marcusmonteirodesouza.realworld.api.profiles.models.Profile;
 import com.marcusmonteirodesouza.realworld.api.profiles.repositories.FollowsRepository;
 import com.marcusmonteirodesouza.realworld.api.users.services.users.UsersService;
 import jakarta.ws.rs.NotFoundException;
@@ -20,6 +22,21 @@ public class ProfilesService {
     public ProfilesService(UsersService usersService, FollowsRepository followsRepository) {
         this.usersService = usersService;
         this.followsRepository = followsRepository;
+    }
+
+    public Profile getProfile(String userId, Optional<String> followerId) {
+        var user = usersService.getUserById(userId).orNull();
+
+        if (user == null) {
+            throw new NotFoundException("User '" + userId + "' not found");
+        }
+
+        var following = false;
+        if (followerId.isPresent()) {
+            following = this.isFollowing(followerId.get(), user.getId());
+        }
+
+        return new Profile(user.getUsername(), user.getBio(), user.getImage(), following);
     }
 
     public void followUser(String followerId, String followedId) {
