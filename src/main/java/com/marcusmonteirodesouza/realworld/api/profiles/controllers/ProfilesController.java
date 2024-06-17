@@ -1,5 +1,6 @@
 package com.marcusmonteirodesouza.realworld.api.profiles.controllers;
 
+import com.google.common.base.Optional;
 import com.marcusmonteirodesouza.realworld.api.authentication.IAuthenticationFacade;
 import com.marcusmonteirodesouza.realworld.api.profiles.controllers.dto.ProfileResponse;
 import com.marcusmonteirodesouza.realworld.api.profiles.controllers.dto.ProfileResponse.ProfileResponseProfile;
@@ -43,12 +44,14 @@ public class ProfilesController {
 
         profilesService.followUser(authenticatedUserId, user.getId());
 
+        var profile = profilesService.getProfile(user.getId(), Optional.of(authenticatedUserId));
+
         return new ProfileResponse(
                 new ProfileResponseProfile(
-                        user.getUsername(),
-                        user.getBio().orNull(),
-                        user.getImage().orNull(),
-                        true));
+                        profile.getUsername(),
+                        profile.getBio().orNull(),
+                        profile.getImage().orNull(),
+                        profile.getFollowing()));
     }
 
     @GetMapping("/{username}")
@@ -59,21 +62,18 @@ public class ProfilesController {
             throw new NotFoundException("Username '" + username + "' not found");
         }
 
-        var authentication = authenticationFacade.getAuthentication();
-        var isFollowing = false;
+        var authenticatedUserId = authenticationFacade.getAuthentication().getName();
 
-        if (authentication != null) {
-            var authenticatedUserId = authentication.getName();
-
-            isFollowing = this.profilesService.isFollowing(authenticatedUserId, user.getId());
-        }
+        var profile =
+                profilesService.getProfile(
+                        user.getId(), Optional.fromNullable(authenticatedUserId));
 
         return new ProfileResponse(
                 new ProfileResponseProfile(
-                        user.getUsername(),
-                        user.getBio().orNull(),
-                        user.getImage().orNull(),
-                        isFollowing));
+                        profile.getUsername(),
+                        profile.getBio().orNull(),
+                        profile.getImage().orNull(),
+                        profile.getFollowing()));
     }
 
     @DeleteMapping("/{username}/follow")
@@ -89,11 +89,13 @@ public class ProfilesController {
 
         profilesService.unfollowUser(authenticatedUserId, user.getId());
 
+        var profile = profilesService.getProfile(user.getId(), Optional.of(authenticatedUserId));
+
         return new ProfileResponse(
                 new ProfileResponseProfile(
-                        user.getUsername(),
-                        user.getBio().orNull(),
-                        user.getImage().orNull(),
-                        false));
+                        profile.getUsername(),
+                        profile.getBio().orNull(),
+                        profile.getImage().orNull(),
+                        profile.getFollowing()));
     }
 }
