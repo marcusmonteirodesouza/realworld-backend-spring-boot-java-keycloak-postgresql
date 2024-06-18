@@ -21,8 +21,8 @@ public final class ProfileResponse {
 
         public ProfileResponseProfile(Profile profile) {
             this.username = profile.getUsername();
-            this.bio = profile.getBio().orNull();
-            this.image = profile.getImage().orNull();
+            this.bio = profile.getBio().orElse(null);
+            this.image = profile.getImage().orElse(null);
             this.following = profile.getFollowing();
         }
 

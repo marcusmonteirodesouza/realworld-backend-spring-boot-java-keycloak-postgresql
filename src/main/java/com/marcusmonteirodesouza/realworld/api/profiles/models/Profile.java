@@ -1,6 +1,6 @@
 package com.marcusmonteirodesouza.realworld.api.profiles.models;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 public class Profile {
     private final String username;

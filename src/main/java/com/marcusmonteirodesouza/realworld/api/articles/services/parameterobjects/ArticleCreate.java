@@ -1,7 +1,7 @@
 package com.marcusmonteirodesouza.realworld.api.articles.services.parameterobjects;
 
-import com.google.common.base.Optional;
 import java.util.Collection;
+import java.util.Optional;
 
 public class ArticleCreate {
     private final String authorId;
@@ -15,7 +15,7 @@ public class ArticleCreate {
         this.title = title;
         this.description = description;
         this.body = body;
-        this.tagList = Optional.absent();
+        this.tagList = Optional.empty();
     }
 
     public ArticleCreate(

@@ -1,7 +1,6 @@
 package com.marcusmonteirodesouza.realworld.api.articles.services;
 
 import com.github.slugify.Slugify;
-import com.google.common.base.Optional;
 import com.marcusmonteirodesouza.realworld.api.articles.models.Article;
 import com.marcusmonteirodesouza.realworld.api.articles.models.Favorite;
 import com.marcusmonteirodesouza.realworld.api.articles.models.Tag;
@@ -15,6 +14,7 @@ import jakarta.ws.rs.NotFoundException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +50,7 @@ public class ArticlesService {
                         + ", TagList"
                         + articleCreate.getTagList());
 
-        var author = usersService.getUserById(articleCreate.getAuthorId()).orNull();
+        var author = usersService.getUserById(articleCreate.getAuthorId()).orElse(null);
 
         if (author == null) {
             throw new NotFoundException("Author '" + articleCreate.getAuthorId() + "' not found");
@@ -92,13 +92,13 @@ public class ArticlesService {
     }
 
     public Optional<Article> getArticleBySlug(String slug) {
-        return Optional.fromNullable(articlesRepository.getArticleBySlug(slug));
+        return Optional.ofNullable(articlesRepository.getArticleBySlug(slug));
     }
 
     public Article favoriteArticle(String userId, String articleId) {
         logger.info("User '" + userId + "' favoriting Article '" + articleId + "'");
 
-        var article = getArticleById(articleId).orNull();
+        var article = getArticleById(articleId).orElse(null);
 
         if (article == null) {
             throw new NotFoundException("Article '" + articleId + "' not found");
@@ -108,7 +108,7 @@ public class ArticlesService {
             return article;
         }
 
-        var user = usersService.getUserById(userId).orNull();
+        var user = usersService.getUserById(userId).orElse(null);
 
         if (user == null) {
             throw new NotFoundException("User '" + userId + "' not found");
@@ -125,7 +125,7 @@ public class ArticlesService {
     public Article unfavoriteArticle(String userId, String articleId) {
         logger.info("User '" + userId + "' unfavoriting Article '" + articleId + "'");
 
-        var article = getArticleById(articleId).orNull();
+        var article = getArticleById(articleId).orElse(null);
 
         if (article == null) {
             throw new NotFoundException("Article '" + articleId + "' not found");

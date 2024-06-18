@@ -1,13 +1,13 @@
 package com.marcusmonteirodesouza.realworld.api.users.services.users.parameterobjects;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 public final class UserUpdate {
-    private Optional<String> email = Optional.absent();
-    private Optional<String> username = Optional.absent();
-    private Optional<String> password = Optional.absent();
-    private Optional<String> bio = Optional.absent();
-    private Optional<String> image = Optional.absent();
+    private Optional<String> email = Optional.empty();
+    private Optional<String> username = Optional.empty();
+    private Optional<String> password = Optional.empty();
+    private Optional<String> bio = Optional.empty();
+    private Optional<String> image = Optional.empty();
 
     public UserUpdate() {
         super();

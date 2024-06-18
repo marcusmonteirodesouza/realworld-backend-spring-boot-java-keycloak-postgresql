@@ -1,12 +1,12 @@
 package com.marcusmonteirodesouza.realworld.api.profiles.controllers;
 
-import com.google.common.base.Optional;
 import com.marcusmonteirodesouza.realworld.api.authentication.IAuthenticationFacade;
 import com.marcusmonteirodesouza.realworld.api.profiles.controllers.dto.ProfileResponse;
 import com.marcusmonteirodesouza.realworld.api.profiles.services.ProfilesService;
 import com.marcusmonteirodesouza.realworld.api.users.services.users.UsersService;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
+import java.util.Optional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,7 +33,7 @@ public class ProfilesController {
     @PostMapping("/{username}/follow")
     @Transactional
     public ProfileResponse followUser(@PathVariable String username) {
-        var user = usersService.getUserByUsername(username).orNull();
+        var user = usersService.getUserByUsername(username).orElse(null);
 
         if (user == null) {
             throw new NotFoundException("Username '" + username + "' not found");
@@ -50,7 +50,7 @@ public class ProfilesController {
 
     @GetMapping("/{username}")
     public ProfileResponse getProfile(@PathVariable String username) {
-        var user = usersService.getUserByUsername(username).orNull();
+        var user = usersService.getUserByUsername(username).orElse(null);
 
         if (user == null) {
             throw new NotFoundException("Username '" + username + "' not found");
@@ -59,8 +59,7 @@ public class ProfilesController {
         var authenticatedUserId = authenticationFacade.getAuthentication().getName();
 
         var profile =
-                profilesService.getProfile(
-                        user.getId(), Optional.fromNullable(authenticatedUserId));
+                profilesService.getProfile(user.getId(), Optional.ofNullable(authenticatedUserId));
 
         return new ProfileResponse(profile);
     }
@@ -68,7 +67,7 @@ public class ProfilesController {
     @DeleteMapping("/{username}/follow")
     @Transactional
     public ProfileResponse unfollowUser(@PathVariable String username) {
-        var user = usersService.getUserByUsername(username).orNull();
+        var user = usersService.getUserByUsername(username).orElse(null);
 
         if (user == null) {
             throw new NotFoundException("Username '" + username + "' not found");

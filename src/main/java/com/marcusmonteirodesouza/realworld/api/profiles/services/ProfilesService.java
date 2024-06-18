@@ -1,12 +1,12 @@
 package com.marcusmonteirodesouza.realworld.api.profiles.services;
 
-import com.google.common.base.Optional;
 import com.marcusmonteirodesouza.realworld.api.profiles.models.Follow;
 import com.marcusmonteirodesouza.realworld.api.profiles.models.Profile;
 import com.marcusmonteirodesouza.realworld.api.profiles.repositories.FollowsRepository;
 import com.marcusmonteirodesouza.realworld.api.users.services.users.UsersService;
 import jakarta.ws.rs.NotFoundException;
 import java.lang.invoke.MethodHandles;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -25,7 +25,7 @@ public class ProfilesService {
     }
 
     public Profile getProfile(String userId, Optional<String> followerId) {
-        var user = usersService.getUserById(userId).orNull();
+        var user = usersService.getUserById(userId).orElse(null);
 
         if (user == null) {
             throw new NotFoundException("User '" + userId + "' not found");
@@ -46,13 +46,13 @@ public class ProfilesService {
 
         logger.info("Creating Follow. Follower: " + followerId + ", Followed: " + followedId);
 
-        var follower = usersService.getUserById(followerId).orNull();
+        var follower = usersService.getUserById(followerId).orElse(null);
 
         if (follower == null) {
             throw new NotFoundException("Follower '" + followerId + "' not found");
         }
 
-        var followed = usersService.getUserById(followedId).orNull();
+        var followed = usersService.getUserById(followedId).orElse(null);
 
         if (followed == null) {
             throw new NotFoundException("Followed '" + followedId + "' not found");

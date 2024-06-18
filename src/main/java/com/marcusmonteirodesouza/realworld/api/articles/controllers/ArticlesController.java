@@ -1,6 +1,5 @@
 package com.marcusmonteirodesouza.realworld.api.articles.controllers;
 
-import com.google.common.base.Optional;
 import com.marcusmonteirodesouza.realworld.api.articles.controllers.dto.ArticleResponse;
 import com.marcusmonteirodesouza.realworld.api.articles.controllers.dto.CreateArticleRequest;
 import com.marcusmonteirodesouza.realworld.api.articles.services.ArticlesService;
@@ -10,6 +9,7 @@ import com.marcusmonteirodesouza.realworld.api.exceptions.AlreadyExistsException
 import com.marcusmonteirodesouza.realworld.api.profiles.services.ProfilesService;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
+import java.util.Optional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -47,9 +47,9 @@ public class ArticlesController {
                                 request.article.title,
                                 request.article.description,
                                 request.article.body,
-                                Optional.fromNullable(request.article.tagList)));
+                                Optional.ofNullable(request.article.tagList)));
 
-        var authorProfile = profilesService.getProfile(article.getAuthorId(), Optional.absent());
+        var authorProfile = profilesService.getProfile(article.getAuthorId(), Optional.empty());
 
         return new ArticleResponse(userId, article, authorProfile);
     }
@@ -59,7 +59,7 @@ public class ArticlesController {
     public ArticleResponse favoriteArticle(@PathVariable String slug) {
         var userId = Optional.of(authenticationFacade.getAuthentication().getName());
 
-        var article = articlesService.getArticleBySlug(slug).orNull();
+        var article = articlesService.getArticleBySlug(slug).orElse(null);
 
         if (article == null) {
             throw new NotFoundException("Article with slug '" + slug + "' not found");
@@ -74,9 +74,9 @@ public class ArticlesController {
 
     @GetMapping("/{slug}")
     public ArticleResponse getArticle(@PathVariable String slug) {
-        var maybeUserId = Optional.fromNullable(authenticationFacade.getAuthentication().getName());
+        var maybeUserId = Optional.ofNullable(authenticationFacade.getAuthentication().getName());
 
-        var article = articlesService.getArticleBySlug(slug).orNull();
+        var article = articlesService.getArticleBySlug(slug).orElse(null);
 
         if (article == null) {
             throw new NotFoundException("Article with slug '" + slug + "' not found");
@@ -92,7 +92,7 @@ public class ArticlesController {
     public ArticleResponse unfavoriteArticle(@PathVariable String slug) {
         var userId = Optional.of(authenticationFacade.getAuthentication().getName());
 
-        var article = articlesService.getArticleBySlug(slug).orNull();
+        var article = articlesService.getArticleBySlug(slug).orElse(null);
 
         if (article == null) {
             throw new NotFoundException("Article with slug '" + slug + "' not found");

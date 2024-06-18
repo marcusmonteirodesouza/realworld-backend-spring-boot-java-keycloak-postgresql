@@ -1,6 +1,6 @@
 package com.marcusmonteirodesouza.realworld.api.users.models;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 public class User {
     private final String id;

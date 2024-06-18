@@ -1,6 +1,5 @@
 package com.marcusmonteirodesouza.realworld.api.users.controllers;
 
-import com.google.common.base.Optional;
 import com.marcusmonteirodesouza.realworld.api.authentication.IAuthenticationFacade;
 import com.marcusmonteirodesouza.realworld.api.exceptions.AlreadyExistsException;
 import com.marcusmonteirodesouza.realworld.api.users.controllers.dto.LoginRequest;
@@ -11,6 +10,7 @@ import com.marcusmonteirodesouza.realworld.api.users.services.users.UsersService
 import com.marcusmonteirodesouza.realworld.api.users.services.users.parameterobjects.UserUpdate;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
+import java.util.Optional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -42,7 +42,7 @@ public class UsersController {
 
     @PostMapping("/users/login")
     public UserResponse login(@RequestBody LoginRequest request) {
-        var user = usersService.getUserByEmail(request.user.email).orNull();
+        var user = usersService.getUserByEmail(request.user.email).orElse(null);
 
         if (user == null) {
             throw new NotFoundException("User with email '" + request.user.email + "' not found");
@@ -60,7 +60,7 @@ public class UsersController {
 
         var userId = authentication.getName();
 
-        var user = usersService.getUserById(userId).orNull();
+        var user = usersService.getUserById(userId).orElse(null);
 
         if (user == null) {
             throw new NotFoundException("User with ID '" + userId + "' not found");
@@ -86,12 +86,12 @@ public class UsersController {
                         .updateUser(
                                 userId,
                                 new UserUpdate(
-                                        Optional.fromNullable(request.user.email),
-                                        Optional.fromNullable(request.user.username),
-                                        Optional.fromNullable(request.user.password),
-                                        Optional.fromNullable(request.user.bio),
-                                        Optional.fromNullable(request.user.image)))
-                        .orNull();
+                                        Optional.ofNullable(request.user.email),
+                                        Optional.ofNullable(request.user.username),
+                                        Optional.ofNullable(request.user.password),
+                                        Optional.ofNullable(request.user.bio),
+                                        Optional.ofNullable(request.user.image)))
+                        .orElse(null);
 
         if (user == null) {
             throw new NotFoundException("User with ID '" + userId + "' not found");
