@@ -1,24 +1,25 @@
 package com.marcusmonteirodesouza.realworld.api.articles.services.parameterobjects;
 
+import java.util.Collection;
 import java.util.Optional;
 
-public class ArticleList {
+public class ArticlesList {
     private Optional<String> tag = Optional.empty();
-    private Optional<String> authorId = Optional.empty();
+    private Optional<Collection<String>> authorIds = Optional.empty();
     private Optional<String> favoritedByUserId = Optional.empty();
     private Optional<Integer> limit = Optional.empty();
     private Optional<Integer> offset = Optional.empty();
 
-    public ArticleList() {}
+    public ArticlesList() {}
 
-    public ArticleList(
+    public ArticlesList(
             Optional<String> tag,
-            Optional<String> authorId,
+            Optional<Collection<String>> authorIds,
             Optional<String> favoritedByUserId,
             Optional<Integer> limit,
             Optional<Integer> offset) {
         this.tag = tag;
-        this.authorId = authorId;
+        this.authorIds = authorIds;
         this.favoritedByUserId = favoritedByUserId;
         this.limit = limit;
         this.offset = offset;
@@ -28,8 +29,8 @@ public class ArticleList {
         return tag;
     }
 
-    public Optional<String> getAuthorId() {
-        return authorId;
+    public Optional<Collection<String>> getAuthorIds() {
+        return authorIds;
     }
 
     public Optional<String> getFavoritedByUserId() {

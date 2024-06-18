@@ -1,6 +1,7 @@
 package com.marcusmonteirodesouza.realworld.api.users.models;
 
 import java.util.Optional;
+import org.keycloak.representations.idm.UserRepresentation;
 
 public class User {
     private final String id;
@@ -20,6 +21,15 @@ public class User {
         this.username = username;
         this.bio = bio;
         this.image = image;
+    }
+
+    public User(UserRepresentation userRepresentation) {
+        this(
+                userRepresentation.getId(),
+                userRepresentation.getEmail(),
+                userRepresentation.getUsername(),
+                Optional.ofNullable(userRepresentation.firstAttribute("bio")),
+                Optional.ofNullable(userRepresentation.firstAttribute("image")));
     }
 
     public String getId() {

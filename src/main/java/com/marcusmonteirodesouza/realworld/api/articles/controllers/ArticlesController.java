@@ -7,16 +7,22 @@ import com.marcusmonteirodesouza.realworld.api.articles.controllers.dto.Multiple
 import com.marcusmonteirodesouza.realworld.api.articles.controllers.dto.UpdateArticleRequest;
 import com.marcusmonteirodesouza.realworld.api.articles.services.ArticlesService;
 import com.marcusmonteirodesouza.realworld.api.articles.services.parameterobjects.ArticleCreate;
-import com.marcusmonteirodesouza.realworld.api.articles.services.parameterobjects.ArticleList;
 import com.marcusmonteirodesouza.realworld.api.articles.services.parameterobjects.ArticleUpdate;
+import com.marcusmonteirodesouza.realworld.api.articles.services.parameterobjects.ArticlesList;
 import com.marcusmonteirodesouza.realworld.api.authentication.IAuthenticationFacade;
 import com.marcusmonteirodesouza.realworld.api.exceptions.AlreadyExistsException;
+import com.marcusmonteirodesouza.realworld.api.profiles.models.Profile;
 import com.marcusmonteirodesouza.realworld.api.profiles.services.ProfilesService;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.NotFoundException;
+import java.lang.invoke.MethodHandles;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,6 +36,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(path = "/articles")
 public class ArticlesController {
+    private final Logger logger =
+            LoggerFactory.getLogger(MethodHandles.lookup().lookupClass().getName());
+
     private final IAuthenticationFacade authenticationFacade;
     private final ArticlesService articlesService;
     private final ProfilesService profilesService;
@@ -105,11 +114,14 @@ public class ArticlesController {
             @RequestParam(defaultValue = "0") Integer offset) {
         var maybeUserId = Optional.ofNullable(authenticationFacade.getAuthentication().getName());
 
+        Optional<Collection<String>> authorIds =
+                author == null ? Optional.empty() : Optional.of(Arrays.asList(author));
+
         var articles =
                 articlesService.listArticles(
-                        new ArticleList(
+                        new ArticlesList(
                                 Optional.ofNullable(tag),
-                                Optional.ofNullable(author),
+                                authorIds,
                                 Optional.ofNullable(favorited),
                                 Optional.of(limit),
                                 Optional.of(offset)));
@@ -121,6 +133,42 @@ public class ArticlesController {
                                     var authorProfile =
                                             profilesService.getProfile(
                                                     article.getAuthorId(), maybeUserId);
+
+                                    return new ArticleResponseArticle(
+                                            maybeUserId, article, authorProfile);
+                                })
+                        .collect(Collectors.toList());
+
+        return new MultipleArticlesResponse(articleResponses);
+    }
+
+    @GetMapping("/feed")
+    public MultipleArticlesResponse feedArticles(
+            @RequestParam(defaultValue = "20") Integer limit,
+            @RequestParam(defaultValue = "0") Integer offset) {
+        var maybeUserId = Optional.of(authenticationFacade.getAuthentication().getName());
+
+        var followedUserProfilesMap =
+                profilesService.listProfilesFollowedByUserId(maybeUserId.get()).stream()
+                        .collect(Collectors.toMap(Profile::getUserId, profile -> profile));
+
+        var articles =
+                articlesService.listArticles(
+                        new ArticlesList(
+                                Optional.empty(),
+                                Optional.of(
+                                        followedUserProfilesMap.keySet().stream()
+                                                .collect(Collectors.toList())),
+                                Optional.empty(),
+                                Optional.of(limit),
+                                Optional.of(offset)));
+
+        var articleResponses =
+                articles.stream()
+                        .map(
+                                article -> {
+                                    var authorProfile =
+                                            followedUserProfilesMap.get(article.getAuthorId());
 
                                     return new ArticleResponseArticle(
                                             maybeUserId, article, authorProfile);
