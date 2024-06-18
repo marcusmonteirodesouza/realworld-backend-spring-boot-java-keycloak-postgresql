@@ -304,4 +304,24 @@ public class ArticlesController {
 
         return new ArticleResponse(maybeUserId, article, authorProfile);
     }
+
+    @DeleteMapping("/{slug}/comments/{commentId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Transactional
+    public void deleteArticle(@PathVariable String slug, @PathVariable String commentId) {
+        var maybeUserId = Optional.of(authenticationFacade.getAuthentication().getName());
+
+        var comment = articlesService.getCommentById(commentId).orElse(null);
+
+        if (comment == null) {
+            throw new NotFoundException("Comment '" + commentId + "' not found");
+        }
+
+        if (!comment.getAuthorId().equals(maybeUserId.get())) {
+            throw new ForbiddenException(
+                    "User '" + maybeUserId.get() + "' cannot delete Comment '" + commentId + "'");
+        }
+
+        articlesService.deleteCommentById(commentId);
+    }
 }

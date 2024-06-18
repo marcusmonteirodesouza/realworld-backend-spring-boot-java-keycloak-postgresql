@@ -259,6 +259,14 @@ public class ArticlesService {
     }
 
     public Comment addCommentToArticle(String articleId, String commentAuthorId, String body) {
+        logger.info(
+                "Adding Comment to Article. Article: "
+                        + articleId
+                        + ", Author: "
+                        + commentAuthorId
+                        + ", Body: "
+                        + body);
+
         var article = getArticleById(articleId).orElse(null);
 
         if (article == null) {
@@ -280,6 +288,10 @@ public class ArticlesService {
         return commentsRepository.saveAndFlush(comment);
     }
 
+    public Optional<Comment> getCommentById(String commentId) {
+        return commentsRepository.findById(commentId);
+    }
+
     public List<Comment> listCommentsByArticleId(String articleId) {
         var article = getArticleById(articleId).orElse(null);
 
@@ -288,6 +300,22 @@ public class ArticlesService {
         }
 
         return commentsRepository.findByArticleOrderByCreatedAtDesc(article);
+    }
+
+    public void deleteCommentById(String commentId) {
+        logger.info("Deleting Comment '" + commentId + "'");
+
+        var comment = getCommentById(commentId).orElse(null);
+
+        if (comment == null) {
+            throw new NotFoundException("Comment '" + commentId + "' not found");
+        }
+
+        var article = comment.getArticle();
+
+        article.removeComment(comment);
+
+        articlesRepository.save(article);
     }
 
     private Boolean isFavorited(String userId, Article article) {
