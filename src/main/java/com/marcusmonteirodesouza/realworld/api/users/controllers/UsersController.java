@@ -31,7 +31,7 @@ public class UsersController {
     }
 
     @PostMapping("/users")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @ResponseStatus(HttpStatus.CREATED)
     public UserResponse registerUser(@RequestBody RegisterUserRequest request)
             throws AlreadyExistsException {
         var user =

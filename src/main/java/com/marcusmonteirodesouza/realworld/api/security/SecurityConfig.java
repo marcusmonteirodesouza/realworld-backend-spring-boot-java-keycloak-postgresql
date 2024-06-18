@@ -31,6 +31,8 @@ public class SecurityConfig {
                                         .permitAll()
                                         .requestMatchers(HttpMethod.GET, "/articles/*/comments")
                                         .permitAll()
+                                        .requestMatchers(HttpMethod.GET, "/tags")
+                                        .permitAll()
                                         .anyRequest()
                                         .authenticated());
 
