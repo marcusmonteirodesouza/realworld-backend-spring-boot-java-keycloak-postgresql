@@ -1,6 +1,7 @@
 package com.marcusmonteirodesouza.realworld.api.articles.services;
 
 import com.github.slugify.Slugify;
+import com.google.common.base.CaseFormat;
 import com.marcusmonteirodesouza.realworld.api.articles.models.Article;
 import com.marcusmonteirodesouza.realworld.api.articles.models.Favorite;
 import com.marcusmonteirodesouza.realworld.api.articles.models.Tag;
@@ -15,7 +16,6 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.ws.rs.NotFoundException;
 import java.lang.invoke.MethodHandles;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -31,17 +31,19 @@ public class ArticlesService {
 
     private final UsersService usersService;
     private final ArticlesRepository articlesRepository;
+    private final TagsRepository tagsRepository;
     private final EntityManager entityManager;
     private final Slugify slg = Slugify.builder().build();
 
     public ArticlesService(
             UsersService usersService,
             ArticlesRepository articlesRepository,
-            EntityManager entityManager,
-            TagsRepository tagsRepository) {
+            TagsRepository tagsRepository,
+            EntityManager entityManager) {
         this.usersService = usersService;
-        this.entityManager = entityManager;
         this.articlesRepository = articlesRepository;
+        this.tagsRepository = tagsRepository;
+        this.entityManager = entityManager;
     }
 
     public Article createArticle(ArticleCreate articleCreate) throws AlreadyExistsException {
@@ -69,14 +71,13 @@ public class ArticlesService {
             throw new AlreadyExistsException("Article with slug '" + slug + "' already exists");
         }
 
-        var tagList = new ArrayList<Tag>();
+        var tagList = new HashSet<Tag>();
 
         if (articleCreate.getTagList().isPresent()) {
             tagList.addAll(
-                    new HashSet<String>(articleCreate.getTagList().get())
-                            .stream()
-                                    .map(tagValue -> new Tag(tagValue))
-                                    .collect(Collectors.toList()));
+                    articleCreate.getTagList().get().stream()
+                            .map(tagValue -> makeTag(tagValue))
+                            .collect(Collectors.toSet()));
         }
 
         var article = new Article();
@@ -147,7 +148,9 @@ public class ArticlesService {
         var articles = query.getResultList();
 
         for (var article : articles) {
-            article.getTagList().sort((tag1, tag2) -> tag1.getValue().compareTo(tag2.getValue()));
+            article.getTagList().stream()
+                    .collect(Collectors.toList())
+                    .sort((tag1, tag2) -> tag1.getValue().compareTo(tag2.getValue()));
         }
 
         return articles;
@@ -187,6 +190,16 @@ public class ArticlesService {
         }
 
         return articlesRepository.saveAndFlush(article);
+    }
+
+    public void deleteArticleById(String articleId) {
+        logger.info("Deleting Article '" + articleId);
+
+        if (!articlesRepository.existsById(articleId)) {
+            throw new NotFoundException("Article '" + articleId + "' not found");
+        }
+
+        articlesRepository.deleteById(articleId);
     }
 
     public Article favoriteArticle(String userId, String articleId) {
@@ -249,5 +262,19 @@ public class ArticlesService {
 
     private String makeSlug(String title) {
         return slg.slugify(title);
+    }
+
+    private Tag makeTag(String tagValue) {
+        tagValue = tagValue.toLowerCase().trim();
+        tagValue = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_HYPHEN, tagValue);
+        tagValue = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_HYPHEN, tagValue);
+
+        var maybeTag = tagsRepository.findByValue(tagValue);
+
+        if (maybeTag.isPresent()) {
+            return maybeTag.get();
+        } else {
+            return new Tag(tagValue);
+        }
     }
 }

@@ -1,6 +1,7 @@
 package com.marcusmonteirodesouza.realworld.api.articles.models;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -17,7 +18,8 @@ public class Favorite {
 
     @NotBlank private String userId;
 
-    @ManyToOne() private Article article;
+    @ManyToOne(fetch = FetchType.EAGER)
+    private Article article;
 
     @CreationTimestamp private Timestamp createdAt;
 

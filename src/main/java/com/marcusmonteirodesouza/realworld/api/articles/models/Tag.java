@@ -2,13 +2,15 @@ package com.marcusmonteirodesouza.realworld.api.articles.models;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 import jakarta.validation.constraints.NotBlank;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 public class Tag {
@@ -20,7 +22,8 @@ public class Tag {
     @NotBlank
     private String value;
 
-    @ManyToMany() private Collection<Article> articles = new ArrayList<Article>();
+    @ManyToMany(mappedBy = "tagList", fetch = FetchType.EAGER)
+    private Set<Article> articles = new HashSet<Article>();
 
     public Tag() {}
 
@@ -42,15 +45,5 @@ public class Tag {
 
     public Collection<Article> getArticles() {
         return articles;
-    }
-
-    public void addArticle(Article article) {
-        articles.add(article);
-        article.getTagList().add(this);
-    }
-
-    public void removeArticle(Article article) {
-        this.articles.removeIf(a -> a.getId().equals(article.getId()));
-        article.getTagList().removeIf(t -> t.getId().equals(this.getId()));
     }
 }

@@ -9,10 +9,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.NotBlank;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -34,16 +33,14 @@ public class Article {
 
     @NotBlank private String body;
 
-    @ManyToMany(
-            mappedBy = "articles",
-            cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    private List<Tag> tagList = new ArrayList<Tag>();
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private Set<Tag> tagList = new HashSet<Tag>();
 
     @OneToMany(
             mappedBy = "article",
             cascade = {CascadeType.ALL},
             orphanRemoval = true)
-    private Collection<Favorite> favorites = new ArrayList<Favorite>();
+    private Set<Favorite> favorites = new HashSet<Favorite>();
 
     @CreationTimestamp private Date createdAt;
 
@@ -95,11 +92,11 @@ public class Article {
         this.body = body;
     }
 
-    public List<Tag> getTagList() {
+    public Set<Tag> getTagList() {
         return tagList;
     }
 
-    public void setTagList(Collection<Tag> tagList) {
+    public void setTagList(Set<Tag> tagList) {
         tagList.forEach(tag -> addTag(tag));
     }
 
@@ -109,11 +106,11 @@ public class Article {
     }
 
     public void removeTag(Tag tag) {
-        this.tagList.removeIf(t -> t.getId().equals(tag.getId()));
-        tag.getArticles().removeIf(a -> a.getId().equals(this.getId()));
+        this.tagList.remove(tag);
+        tag.getArticles().remove(this);
     }
 
-    public Collection<Favorite> getFavorites() {
+    public Set<Favorite> getFavorites() {
         return favorites;
     }
 
@@ -123,8 +120,8 @@ public class Article {
     }
 
     public void removeFavorite(Favorite favorite) {
-        favorite.setArticle(null);
         this.favorites.remove(favorite);
+        favorite.setArticle(null);
     }
 
     public Date getCreatedAt() {

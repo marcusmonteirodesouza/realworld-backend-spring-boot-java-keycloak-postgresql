@@ -11,11 +11,13 @@ import com.marcusmonteirodesouza.realworld.api.users.services.users.parameterobj
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
 import java.util.Optional;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -29,6 +31,7 @@ public class UsersController {
     }
 
     @PostMapping("/users")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public UserResponse registerUser(@RequestBody RegisterUserRequest request)
             throws AlreadyExistsException {
         var user =
