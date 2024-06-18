@@ -7,6 +7,7 @@ import com.marcusmonteirodesouza.realworld.api.articles.models.Tag;
 import com.marcusmonteirodesouza.realworld.api.articles.repositories.ArticlesRepository;
 import com.marcusmonteirodesouza.realworld.api.articles.repositories.TagsRepository;
 import com.marcusmonteirodesouza.realworld.api.articles.services.parameterobjects.ArticleCreate;
+import com.marcusmonteirodesouza.realworld.api.articles.services.parameterobjects.ArticleUpdate;
 import com.marcusmonteirodesouza.realworld.api.exceptions.AlreadyExistsException;
 import com.marcusmonteirodesouza.realworld.api.users.services.users.UsersService;
 import jakarta.persistence.EntityNotFoundException;
@@ -93,6 +94,42 @@ public class ArticlesService {
 
     public Optional<Article> getArticleBySlug(String slug) {
         return Optional.ofNullable(articlesRepository.getArticleBySlug(slug));
+    }
+
+    public Article updateArticle(String articleId, ArticleUpdate articleUpdate) {
+        logger.info(
+                "Updating Article: '"
+                        + articleId
+                        + "'. Title: "
+                        + articleUpdate.getTitle()
+                        + ". Description: "
+                        + articleUpdate.getDescription()
+                        + ". Body: "
+                        + articleUpdate.getBody());
+
+        var article = getArticleById(articleId).orElse(null);
+
+        if (article == null) {
+            throw new NotFoundException("Article '" + articleId + "' not found");
+        }
+
+        if (articleUpdate.getTitle().isPresent()) {
+            var title = articleUpdate.getTitle().get();
+            var slug = makeSlug(title);
+
+            article.setSlug(slug);
+            article.setTitle(title);
+        }
+
+        if (articleUpdate.getDescription().isPresent()) {
+            article.setDescription(articleUpdate.getDescription().get());
+        }
+
+        if (articleUpdate.getBody().isPresent()) {
+            article.setBody(articleUpdate.getBody().get());
+        }
+
+        return articlesRepository.saveAndFlush(article);
     }
 
     public Article favoriteArticle(String userId, String articleId) {
