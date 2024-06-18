@@ -6,7 +6,9 @@ import com.marcusmonteirodesouza.realworld.api.users.services.users.parameterobj
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import java.lang.invoke.MethodHandles;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.apache.commons.validator.routines.EmailValidator;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.keycloak.OAuth2Constants;
@@ -89,12 +91,7 @@ public class UsersService {
 
         userResource.resetPassword(passwordCredentialRepresentation);
 
-        return new User(
-                userRepresentation.getId(),
-                userRepresentation.getEmail(),
-                userRepresentation.getUsername(),
-                Optional.empty(),
-                Optional.empty());
+        return new User(userRepresentation);
     }
 
     public Optional<User> getUserById(String userId) {
@@ -102,13 +99,7 @@ public class UsersService {
 
         var userRepresentation = usersResource.get(userId).toRepresentation();
 
-        return Optional.of(
-                new User(
-                        userRepresentation.getId(),
-                        userRepresentation.getEmail(),
-                        userRepresentation.getUsername(),
-                        Optional.ofNullable(userRepresentation.firstAttribute("bio")),
-                        Optional.ofNullable(userRepresentation.firstAttribute("image"))));
+        return Optional.of(new User(userRepresentation));
     }
 
     public Optional<User> getUserByEmail(String email) {
@@ -122,13 +113,7 @@ public class UsersService {
 
         var userRepresentation = usersByEmail.getFirst();
 
-        return Optional.of(
-                new User(
-                        userRepresentation.getId(),
-                        userRepresentation.getEmail(),
-                        userRepresentation.getUsername(),
-                        Optional.ofNullable(userRepresentation.firstAttribute("bio")),
-                        Optional.ofNullable(userRepresentation.firstAttribute("image"))));
+        return Optional.of(new User(userRepresentation));
     }
 
     public Optional<User> getUserByUsername(String username) {
@@ -142,13 +127,17 @@ public class UsersService {
 
         var userRepresentation = usersByEmail.getFirst();
 
-        return Optional.of(
-                new User(
-                        userRepresentation.getId(),
-                        userRepresentation.getEmail(),
-                        userRepresentation.getUsername(),
-                        Optional.ofNullable(userRepresentation.firstAttribute("bio")),
-                        Optional.ofNullable(userRepresentation.firstAttribute("image"))));
+        return Optional.of(new User(userRepresentation));
+    }
+
+    public List<User> listUsers() {
+        var usersResource = keycloakAdminInstance.realm(keycloakRealm).users();
+
+        var userRepresentations = usersResource.list();
+
+        return userRepresentations.stream()
+                .map(userRepresentation -> new User(userRepresentation))
+                .collect(Collectors.toList());
     }
 
     public String getToken(String username, String password) {

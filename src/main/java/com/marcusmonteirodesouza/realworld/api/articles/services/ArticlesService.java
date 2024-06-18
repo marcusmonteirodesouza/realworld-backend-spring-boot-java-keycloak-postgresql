@@ -7,8 +7,8 @@ import com.marcusmonteirodesouza.realworld.api.articles.models.Tag;
 import com.marcusmonteirodesouza.realworld.api.articles.repositories.articles.ArticlesRepository;
 import com.marcusmonteirodesouza.realworld.api.articles.repositories.tags.TagsRepository;
 import com.marcusmonteirodesouza.realworld.api.articles.services.parameterobjects.ArticleCreate;
-import com.marcusmonteirodesouza.realworld.api.articles.services.parameterobjects.ArticleList;
 import com.marcusmonteirodesouza.realworld.api.articles.services.parameterobjects.ArticleUpdate;
+import com.marcusmonteirodesouza.realworld.api.articles.services.parameterobjects.ArticlesList;
 import com.marcusmonteirodesouza.realworld.api.exceptions.AlreadyExistsException;
 import com.marcusmonteirodesouza.realworld.api.users.services.users.UsersService;
 import jakarta.persistence.EntityManager;
@@ -102,7 +102,7 @@ public class ArticlesService {
         return Optional.ofNullable(articlesRepository.getArticleBySlug(slug));
     }
 
-    public List<Article> listArticles(ArticleList articleList) {
+    public List<Article> listArticles(ArticlesList articlesList) {
         var criteriaBuilder = entityManager.getCriteriaBuilder();
         var articleCriteriaQuery = criteriaBuilder.createQuery(Article.class);
         var articleRoot = articleCriteriaQuery.from(Article.class);
@@ -110,31 +110,30 @@ public class ArticlesService {
 
         var predicate = criteriaBuilder.conjunction();
 
-        if (articleList.getTag().isPresent()) {
+        if (articlesList.getTag().isPresent()) {
             var joinArticleTag = articleRoot.join("tagList");
             predicate =
                     criteriaBuilder.and(
                             predicate,
                             criteriaBuilder.equal(
-                                    joinArticleTag.get("value"), articleList.getTag().get()));
+                                    joinArticleTag.get("value"), articlesList.getTag().get()));
         }
 
-        if (articleList.getAuthorId().isPresent()) {
+        if (articlesList.getAuthorIds().isPresent()) {
             predicate =
                     criteriaBuilder.and(
                             predicate,
-                            criteriaBuilder.equal(
-                                    articleRoot.get("authorId"), articleList.getAuthorId().get()));
+                            articleRoot.get("authorId").in(articlesList.getAuthorIds().get()));
         }
 
-        if (articleList.getFavoritedByUserId().isPresent()) {
+        if (articlesList.getFavoritedByUserId().isPresent()) {
             var joinArticleFavorite = articleRoot.join("favorites");
             predicate =
                     criteriaBuilder.and(
                             predicate,
                             criteriaBuilder.equal(
                                     joinArticleFavorite.get("userId"),
-                                    articleList.getFavoritedByUserId().get()));
+                                    articlesList.getFavoritedByUserId().get()));
         }
 
         articleCriteriaQuery.where(predicate);
@@ -142,8 +141,8 @@ public class ArticlesService {
 
         var query = entityManager.createQuery(articleCriteriaQuery);
 
-        articleList.getLimit().ifPresent(query::setMaxResults);
-        articleList.getOffset().ifPresent(query::setFirstResult);
+        articlesList.getLimit().ifPresent(query::setMaxResults);
+        articlesList.getOffset().ifPresent(query::setFirstResult);
 
         var articles = query.getResultList();
 

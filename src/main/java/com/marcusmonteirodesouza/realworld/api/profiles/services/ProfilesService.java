@@ -6,7 +6,10 @@ import com.marcusmonteirodesouza.realworld.api.profiles.repositories.FollowsRepo
 import com.marcusmonteirodesouza.realworld.api.users.services.users.UsersService;
 import jakarta.ws.rs.NotFoundException;
 import java.lang.invoke.MethodHandles;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -32,11 +35,24 @@ public class ProfilesService {
         }
 
         var following = false;
+
         if (followerId.isPresent()) {
             following = this.isFollowing(followerId.get(), user.getId());
         }
 
-        return new Profile(user.getUsername(), user.getBio(), user.getImage(), following);
+        return new Profile(user, following);
+    }
+
+    public List<Profile> listProfilesFollowedByUserId(String userId) {
+        Set<String> followedUserIds =
+                followsRepository.findByFollowerId(userId).stream()
+                        .map(follow -> follow.getFollowedId())
+                        .collect(Collectors.toSet());
+
+        return usersService.listUsers().stream()
+                .filter(user -> followedUserIds.contains(user.getId()))
+                .map(user -> new Profile(user, true))
+                .collect(Collectors.toList());
     }
 
     public void followUser(String followerId, String followedId) {
@@ -75,7 +91,7 @@ public class ProfilesService {
         followsRepository.deleteByFollowerIdAndFollowedId(followerId, followedId);
     }
 
-    public Boolean isFollowing(String followerId, String followedId) {
+    private Boolean isFollowing(String followerId, String followedId) {
         return this.followsRepository.existsByFollowerIdAndFollowedId(followerId, followedId);
     }
 }
