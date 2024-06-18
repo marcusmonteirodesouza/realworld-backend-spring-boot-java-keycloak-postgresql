@@ -1,7 +1,9 @@
 package com.marcusmonteirodesouza.realworld.api.articles.controllers;
 
+import com.marcusmonteirodesouza.realworld.api.articles.controllers.dto.AddCommentToArticleRequest;
 import com.marcusmonteirodesouza.realworld.api.articles.controllers.dto.ArticleResponse;
 import com.marcusmonteirodesouza.realworld.api.articles.controllers.dto.ArticleResponse.ArticleResponseArticle;
+import com.marcusmonteirodesouza.realworld.api.articles.controllers.dto.CommentResponse;
 import com.marcusmonteirodesouza.realworld.api.articles.controllers.dto.CreateArticleRequest;
 import com.marcusmonteirodesouza.realworld.api.articles.controllers.dto.MultipleArticlesResponse;
 import com.marcusmonteirodesouza.realworld.api.articles.controllers.dto.UpdateArticleRequest;
@@ -85,6 +87,27 @@ public class ArticlesController {
         var authorProfile = profilesService.getProfile(article.getAuthorId(), maybeUserId);
 
         return new ArticleResponse(maybeUserId, article, authorProfile);
+    }
+
+    @PostMapping("/{slug}/comments")
+    @Transactional
+    public CommentResponse addCommentToArticle(
+            @PathVariable String slug, @RequestBody AddCommentToArticleRequest request) {
+        var maybeUserId = Optional.of(authenticationFacade.getAuthentication().getName());
+
+        var article = articlesService.getArticleBySlug(slug).orElse(null);
+
+        if (article == null) {
+            throw new NotFoundException("Article with slug '" + slug + "' not found");
+        }
+
+        var comment =
+                articlesService.addCommentToArticle(
+                        article.getId(), maybeUserId.get(), request.comment.body);
+
+        var authorProfile = profilesService.getProfile(comment.getAuthorId(), maybeUserId);
+
+        return new CommentResponse(maybeUserId, comment, authorProfile);
     }
 
     @GetMapping("/{slug}")
