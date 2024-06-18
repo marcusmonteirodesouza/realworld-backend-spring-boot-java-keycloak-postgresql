@@ -19,13 +19,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(
                         authorizeHttpRequests ->
                                 authorizeHttpRequests
-                                        .requestMatchers(HttpMethod.POST, "/api/users")
+                                        .requestMatchers(HttpMethod.POST, "/users")
                                         .permitAll()
-                                        .requestMatchers(HttpMethod.POST, "/api/users/login")
+                                        .requestMatchers(HttpMethod.POST, "/users/login")
                                         .permitAll()
-                                        .requestMatchers(HttpMethod.GET, "/api/profiles/*")
+                                        .requestMatchers(HttpMethod.GET, "/profiles/*")
                                         .permitAll()
-                                        .requestMatchers(HttpMethod.GET, "/api/articles/*")
+                                        .requestMatchers(HttpMethod.GET, "/articles/*")
                                         .permitAll()
                                         .anyRequest()
                                         .authenticated());

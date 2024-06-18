@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping(path = "/api/articles")
+@RequestMapping(path = "/articles")
 public class ArticlesController {
     private final IAuthenticationFacade authenticationFacade;
     private final ArticlesService articlesService;

@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping(path = "/api/profiles")
+@RequestMapping(path = "/profiles")
 public class ProfilesController {
     private final IAuthenticationFacade authenticationFacade;
     private final UsersService usersService;
