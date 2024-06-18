@@ -3,9 +3,11 @@ package com.marcusmonteirodesouza.realworld.api.articles.services;
 import com.github.slugify.Slugify;
 import com.google.common.base.CaseFormat;
 import com.marcusmonteirodesouza.realworld.api.articles.models.Article;
+import com.marcusmonteirodesouza.realworld.api.articles.models.Comment;
 import com.marcusmonteirodesouza.realworld.api.articles.models.Favorite;
 import com.marcusmonteirodesouza.realworld.api.articles.models.Tag;
 import com.marcusmonteirodesouza.realworld.api.articles.repositories.articles.ArticlesRepository;
+import com.marcusmonteirodesouza.realworld.api.articles.repositories.comments.CommentsRepository;
 import com.marcusmonteirodesouza.realworld.api.articles.repositories.tags.TagsRepository;
 import com.marcusmonteirodesouza.realworld.api.articles.services.parameterobjects.ArticleCreate;
 import com.marcusmonteirodesouza.realworld.api.articles.services.parameterobjects.ArticleUpdate;
@@ -32,6 +34,7 @@ public class ArticlesService {
     private final UsersService usersService;
     private final ArticlesRepository articlesRepository;
     private final TagsRepository tagsRepository;
+    private final CommentsRepository commentsRepository;
     private final EntityManager entityManager;
     private final Slugify slg = Slugify.builder().build();
 
@@ -39,10 +42,12 @@ public class ArticlesService {
             UsersService usersService,
             ArticlesRepository articlesRepository,
             TagsRepository tagsRepository,
+            CommentsRepository commentsRepository,
             EntityManager entityManager) {
         this.usersService = usersService;
         this.articlesRepository = articlesRepository;
         this.tagsRepository = tagsRepository;
+        this.commentsRepository = commentsRepository;
         this.entityManager = entityManager;
     }
 
@@ -251,6 +256,66 @@ public class ArticlesService {
         article.removeFavorite(favorite);
 
         return articlesRepository.saveAndFlush(article);
+    }
+
+    public Comment addCommentToArticle(String articleId, String commentAuthorId, String body) {
+        logger.info(
+                "Adding Comment to Article. Article: "
+                        + articleId
+                        + ", Author: "
+                        + commentAuthorId
+                        + ", Body: "
+                        + body);
+
+        var article = getArticleById(articleId).orElse(null);
+
+        if (article == null) {
+            throw new NotFoundException("Article '" + articleId + "' not found");
+        }
+
+        var user = usersService.getUserById(commentAuthorId).orElse(null);
+
+        if (user == null) {
+            throw new NotFoundException("User '" + commentAuthorId + "' not found");
+        }
+
+        var comment = new Comment();
+        comment.setAuthorId(commentAuthorId);
+        comment.setBody(body);
+
+        article.addComment(comment);
+
+        return commentsRepository.saveAndFlush(comment);
+    }
+
+    public Optional<Comment> getCommentById(String commentId) {
+        return commentsRepository.findById(commentId);
+    }
+
+    public List<Comment> listCommentsByArticleId(String articleId) {
+        var article = getArticleById(articleId).orElse(null);
+
+        if (article == null) {
+            throw new NotFoundException("Article '" + articleId + "' not found");
+        }
+
+        return commentsRepository.findByArticleOrderByCreatedAtDesc(article);
+    }
+
+    public void deleteCommentById(String commentId) {
+        logger.info("Deleting Comment '" + commentId + "'");
+
+        var comment = getCommentById(commentId).orElse(null);
+
+        if (comment == null) {
+            throw new NotFoundException("Comment '" + commentId + "' not found");
+        }
+
+        var article = comment.getArticle();
+
+        article.removeComment(comment);
+
+        articlesRepository.save(article);
     }
 
     private Boolean isFavorited(String userId, Article article) {

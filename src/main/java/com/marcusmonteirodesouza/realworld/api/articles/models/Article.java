@@ -42,6 +42,12 @@ public class Article {
             orphanRemoval = true)
     private Set<Favorite> favorites = new HashSet<Favorite>();
 
+    @OneToMany(
+            mappedBy = "article",
+            cascade = {CascadeType.ALL},
+            orphanRemoval = true)
+    private Set<Comment> comments = new HashSet<Comment>();
+
     @CreationTimestamp private Date createdAt;
 
     @UpdateTimestamp private Date updatedAt;
@@ -122,6 +128,20 @@ public class Article {
     public void removeFavorite(Favorite favorite) {
         this.favorites.remove(favorite);
         favorite.setArticle(null);
+    }
+
+    public Set<Comment> getComments() {
+        return comments;
+    }
+
+    public void addComment(Comment comment) {
+        this.comments.add(comment);
+        comment.setArticle(this);
+    }
+
+    public void removeComment(Comment comment) {
+        this.comments.remove(comment);
+        comment.setArticle(null);
     }
 
     public Date getCreatedAt() {

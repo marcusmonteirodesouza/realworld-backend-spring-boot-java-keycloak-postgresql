@@ -29,6 +29,8 @@ public class SecurityConfig {
                                         .permitAll()
                                         .requestMatchers(HttpMethod.GET, "/articles/*")
                                         .permitAll()
+                                        .requestMatchers(HttpMethod.GET, "/articles/*/comments")
+                                        .permitAll()
                                         .anyRequest()
                                         .authenticated());
 
