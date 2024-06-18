@@ -12,6 +12,7 @@ import jakarta.validation.constraints.NotBlank;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -33,8 +34,10 @@ public class Article {
 
     @NotBlank private String body;
 
-    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    private Collection<Tag> tagList = new ArrayList<Tag>();
+    @ManyToMany(
+            mappedBy = "articles",
+            cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<Tag> tagList = new ArrayList<Tag>();
 
     @OneToMany(
             mappedBy = "article",
@@ -92,12 +95,22 @@ public class Article {
         this.body = body;
     }
 
-    public Collection<Tag> getTagList() {
+    public List<Tag> getTagList() {
         return tagList;
     }
 
     public void setTagList(Collection<Tag> tagList) {
-        this.tagList = tagList;
+        tagList.forEach(tag -> addTag(tag));
+    }
+
+    public void addTag(Tag tag) {
+        this.tagList.add(tag);
+        tag.getArticles().add(this);
+    }
+
+    public void removeTag(Tag tag) {
+        this.tagList.removeIf(t -> t.getId().equals(tag.getId()));
+        tag.getArticles().removeIf(a -> a.getId().equals(this.getId()));
     }
 
     public Collection<Favorite> getFavorites() {

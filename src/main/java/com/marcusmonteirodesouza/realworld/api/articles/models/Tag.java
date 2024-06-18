@@ -7,7 +7,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 import jakarta.validation.constraints.NotBlank;
-import java.util.List;
+import java.util.ArrayList;
+import java.util.Collection;
 
 @Entity
 public class Tag {
@@ -19,7 +20,7 @@ public class Tag {
     @NotBlank
     private String value;
 
-    @ManyToMany() private List<Article> articles;
+    @ManyToMany() private Collection<Article> articles = new ArrayList<Article>();
 
     public Tag() {}
 
@@ -37,5 +38,19 @@ public class Tag {
 
     public void setValue(String value) {
         this.value = value;
+    }
+
+    public Collection<Article> getArticles() {
+        return articles;
+    }
+
+    public void addArticle(Article article) {
+        articles.add(article);
+        article.getTagList().add(this);
+    }
+
+    public void removeArticle(Article article) {
+        this.articles.removeIf(a -> a.getId().equals(article.getId()));
+        article.getTagList().removeIf(t -> t.getId().equals(this.getId()));
     }
 }

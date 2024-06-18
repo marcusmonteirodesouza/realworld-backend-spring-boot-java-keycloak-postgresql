@@ -1,10 +1,13 @@
 package com.marcusmonteirodesouza.realworld.api.articles.controllers;
 
 import com.marcusmonteirodesouza.realworld.api.articles.controllers.dto.ArticleResponse;
+import com.marcusmonteirodesouza.realworld.api.articles.controllers.dto.ArticleResponse.ArticleResponseArticle;
 import com.marcusmonteirodesouza.realworld.api.articles.controllers.dto.CreateArticleRequest;
+import com.marcusmonteirodesouza.realworld.api.articles.controllers.dto.MultipleArticlesResponse;
 import com.marcusmonteirodesouza.realworld.api.articles.controllers.dto.UpdateArticleRequest;
 import com.marcusmonteirodesouza.realworld.api.articles.services.ArticlesService;
 import com.marcusmonteirodesouza.realworld.api.articles.services.parameterobjects.ArticleCreate;
+import com.marcusmonteirodesouza.realworld.api.articles.services.parameterobjects.ArticleList;
 import com.marcusmonteirodesouza.realworld.api.articles.services.parameterobjects.ArticleUpdate;
 import com.marcusmonteirodesouza.realworld.api.authentication.IAuthenticationFacade;
 import com.marcusmonteirodesouza.realworld.api.exceptions.AlreadyExistsException;
@@ -13,6 +16,7 @@ import jakarta.transaction.Transactional;
 import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.NotFoundException;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,6 +24,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -89,6 +94,40 @@ public class ArticlesController {
         var authorProfile = profilesService.getProfile(article.getAuthorId(), maybeUserId);
 
         return new ArticleResponse(maybeUserId, article, authorProfile);
+    }
+
+    @GetMapping()
+    public MultipleArticlesResponse listArticles(
+            @RequestParam(required = false) String tag,
+            @RequestParam(required = false) String author,
+            @RequestParam(required = false) String favorited,
+            @RequestParam(defaultValue = "20") Integer limit,
+            @RequestParam(defaultValue = "0") Integer offset) {
+        var maybeUserId = Optional.ofNullable(authenticationFacade.getAuthentication().getName());
+
+        var articles =
+                articlesService.listArticles(
+                        new ArticleList(
+                                Optional.ofNullable(tag),
+                                Optional.ofNullable(author),
+                                Optional.ofNullable(favorited),
+                                Optional.of(limit),
+                                Optional.of(offset)));
+
+        var articleResponses =
+                articles.stream()
+                        .map(
+                                article -> {
+                                    var authorProfile =
+                                            profilesService.getProfile(
+                                                    article.getAuthorId(), maybeUserId);
+
+                                    return new ArticleResponseArticle(
+                                            maybeUserId, article, authorProfile);
+                                })
+                        .collect(Collectors.toList());
+
+        return new MultipleArticlesResponse(articleResponses);
     }
 
     @PutMapping("/{slug}")

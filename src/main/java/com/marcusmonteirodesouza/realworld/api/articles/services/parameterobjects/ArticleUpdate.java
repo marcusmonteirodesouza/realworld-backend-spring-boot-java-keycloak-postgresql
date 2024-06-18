@@ -1,26 +1,16 @@
 package com.marcusmonteirodesouza.realworld.api.articles.services.parameterobjects;
 
-import java.util.Collection;
 import java.util.Optional;
 
 public class ArticleUpdate {
-    private final Optional<String> title;
-    private final Optional<String> description;
-    private final Optional<String> body;
+    private Optional<String> title = Optional.empty();
+    private Optional<String> description = Optional.empty();
+    private Optional<String> body = Optional.empty();
+
+    public ArticleUpdate() {}
 
     public ArticleUpdate(
             Optional<String> title, Optional<String> description, Optional<String> body) {
-        this.title = title;
-        this.description = description;
-        this.body = body;
-    }
-
-    public ArticleUpdate(
-            Optional<String> authorId,
-            Optional<String> title,
-            Optional<String> description,
-            Optional<String> body,
-            Optional<Collection<Optional<String>>> tagList) {
         this.title = title;
         this.description = description;
         this.body = body;

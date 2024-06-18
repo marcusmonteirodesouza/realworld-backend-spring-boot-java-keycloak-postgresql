@@ -4,17 +4,20 @@ import com.github.slugify.Slugify;
 import com.marcusmonteirodesouza.realworld.api.articles.models.Article;
 import com.marcusmonteirodesouza.realworld.api.articles.models.Favorite;
 import com.marcusmonteirodesouza.realworld.api.articles.models.Tag;
-import com.marcusmonteirodesouza.realworld.api.articles.repositories.ArticlesRepository;
-import com.marcusmonteirodesouza.realworld.api.articles.repositories.TagsRepository;
+import com.marcusmonteirodesouza.realworld.api.articles.repositories.articles.ArticlesRepository;
+import com.marcusmonteirodesouza.realworld.api.articles.repositories.tags.TagsRepository;
 import com.marcusmonteirodesouza.realworld.api.articles.services.parameterobjects.ArticleCreate;
+import com.marcusmonteirodesouza.realworld.api.articles.services.parameterobjects.ArticleList;
 import com.marcusmonteirodesouza.realworld.api.articles.services.parameterobjects.ArticleUpdate;
 import com.marcusmonteirodesouza.realworld.api.exceptions.AlreadyExistsException;
 import com.marcusmonteirodesouza.realworld.api.users.services.users.UsersService;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.ws.rs.NotFoundException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -28,13 +31,16 @@ public class ArticlesService {
 
     private final UsersService usersService;
     private final ArticlesRepository articlesRepository;
+    private final EntityManager entityManager;
     private final Slugify slg = Slugify.builder().build();
 
     public ArticlesService(
             UsersService usersService,
             ArticlesRepository articlesRepository,
+            EntityManager entityManager,
             TagsRepository tagsRepository) {
         this.usersService = usersService;
+        this.entityManager = entityManager;
         this.articlesRepository = articlesRepository;
     }
 
@@ -94,6 +100,58 @@ public class ArticlesService {
 
     public Optional<Article> getArticleBySlug(String slug) {
         return Optional.ofNullable(articlesRepository.getArticleBySlug(slug));
+    }
+
+    public List<Article> listArticles(ArticleList articleList) {
+        var criteriaBuilder = entityManager.getCriteriaBuilder();
+        var articleCriteriaQuery = criteriaBuilder.createQuery(Article.class);
+        var articleRoot = articleCriteriaQuery.from(Article.class);
+        articleCriteriaQuery.select(articleRoot);
+
+        var predicate = criteriaBuilder.conjunction();
+
+        if (articleList.getTag().isPresent()) {
+            var joinArticleTag = articleRoot.join("tagList");
+            predicate =
+                    criteriaBuilder.and(
+                            predicate,
+                            criteriaBuilder.equal(
+                                    joinArticleTag.get("value"), articleList.getTag().get()));
+        }
+
+        if (articleList.getAuthorId().isPresent()) {
+            predicate =
+                    criteriaBuilder.and(
+                            predicate,
+                            criteriaBuilder.equal(
+                                    articleRoot.get("authorId"), articleList.getAuthorId().get()));
+        }
+
+        if (articleList.getFavoritedByUserId().isPresent()) {
+            var joinArticleFavorite = articleRoot.join("favorites");
+            predicate =
+                    criteriaBuilder.and(
+                            predicate,
+                            criteriaBuilder.equal(
+                                    joinArticleFavorite.get("userId"),
+                                    articleList.getFavoritedByUserId().get()));
+        }
+
+        articleCriteriaQuery.where(predicate);
+        articleCriteriaQuery.orderBy(criteriaBuilder.desc(articleRoot.get("createdAt")));
+
+        var query = entityManager.createQuery(articleCriteriaQuery);
+
+        articleList.getLimit().ifPresent(query::setMaxResults);
+        articleList.getOffset().ifPresent(query::setFirstResult);
+
+        var articles = query.getResultList();
+
+        for (var article : articles) {
+            article.getTagList().sort((tag1, tag2) -> tag1.getValue().compareTo(tag2.getValue()));
+        }
+
+        return articles;
     }
 
     public Article updateArticle(String articleId, ArticleUpdate articleUpdate) {
