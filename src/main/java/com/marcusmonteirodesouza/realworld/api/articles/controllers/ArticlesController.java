@@ -17,6 +17,7 @@ import com.marcusmonteirodesouza.realworld.api.authentication.IAuthenticationFac
 import com.marcusmonteirodesouza.realworld.api.exceptions.AlreadyExistsException;
 import com.marcusmonteirodesouza.realworld.api.profiles.models.Profile;
 import com.marcusmonteirodesouza.realworld.api.profiles.services.ProfilesService;
+import com.marcusmonteirodesouza.realworld.api.users.services.users.UsersService;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.NotFoundException;
@@ -41,14 +42,17 @@ import org.springframework.web.bind.annotation.RestController;
 public class ArticlesController {
     private final IAuthenticationFacade authenticationFacade;
     private final ArticlesService articlesService;
+    private final UsersService usersService;
     private final ProfilesService profilesService;
 
     public ArticlesController(
             IAuthenticationFacade authenticationFacade,
             ArticlesService articlesService,
+            UsersService usersService,
             ProfilesService profilesService) {
         this.authenticationFacade = authenticationFacade;
         this.articlesService = articlesService;
+        this.usersService = usersService;
         this.profilesService = profilesService;
     }
 
@@ -124,12 +128,23 @@ public class ArticlesController {
         Optional<Collection<String>> authorIds =
                 author == null ? Optional.empty() : Optional.of(Arrays.asList(author));
 
+        Optional<String> favoritedByUserId = Optional.empty();
+        if (favorited != null) {
+            var favoritedByUser = usersService.getUserByUsername(favorited).orElse(null);
+
+            if (favoritedByUser == null) {
+                throw new NotFoundException("User with username '" + favorited + "' not found");
+            }
+
+            favoritedByUserId = Optional.of(favoritedByUser.getId());
+        }
+
         var articles =
                 articlesService.listArticles(
                         new ArticlesList(
                                 Optional.ofNullable(tag),
                                 authorIds,
-                                Optional.ofNullable(favorited),
+                                favoritedByUserId,
                                 Optional.of(limit),
                                 Optional.of(offset)));
 

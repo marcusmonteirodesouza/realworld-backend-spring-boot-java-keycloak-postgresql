@@ -318,6 +318,10 @@ public class ArticlesService {
         articlesRepository.save(article);
     }
 
+    public List<Tag> listTags() {
+        return tagsRepository.findAll();
+    }
+
     private Boolean isFavorited(String userId, Article article) {
         return article.getFavorites().stream()
                 .filter(favorite -> favorite.getUserId().equals(userId))
