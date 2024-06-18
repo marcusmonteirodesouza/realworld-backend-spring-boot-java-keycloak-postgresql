@@ -280,6 +280,16 @@ public class ArticlesService {
         return commentsRepository.saveAndFlush(comment);
     }
 
+    public List<Comment> listCommentsByArticleId(String articleId) {
+        var article = getArticleById(articleId).orElse(null);
+
+        if (article == null) {
+            throw new NotFoundException("Article '" + articleId + "' not found");
+        }
+
+        return commentsRepository.findByArticleOrderByCreatedAtDesc(article);
+    }
+
     private Boolean isFavorited(String userId, Article article) {
         return article.getFavorites().stream()
                 .filter(favorite -> favorite.getUserId().equals(userId))

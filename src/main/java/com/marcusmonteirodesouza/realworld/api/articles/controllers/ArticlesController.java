@@ -4,8 +4,10 @@ import com.marcusmonteirodesouza.realworld.api.articles.controllers.dto.AddComme
 import com.marcusmonteirodesouza.realworld.api.articles.controllers.dto.ArticleResponse;
 import com.marcusmonteirodesouza.realworld.api.articles.controllers.dto.ArticleResponse.ArticleResponseArticle;
 import com.marcusmonteirodesouza.realworld.api.articles.controllers.dto.CommentResponse;
+import com.marcusmonteirodesouza.realworld.api.articles.controllers.dto.CommentResponse.CommentResponseComment;
 import com.marcusmonteirodesouza.realworld.api.articles.controllers.dto.CreateArticleRequest;
 import com.marcusmonteirodesouza.realworld.api.articles.controllers.dto.MultipleArticlesResponse;
+import com.marcusmonteirodesouza.realworld.api.articles.controllers.dto.MultipleCommentsResponse;
 import com.marcusmonteirodesouza.realworld.api.articles.controllers.dto.UpdateArticleRequest;
 import com.marcusmonteirodesouza.realworld.api.articles.services.ArticlesService;
 import com.marcusmonteirodesouza.realworld.api.articles.services.parameterobjects.ArticleCreate;
@@ -110,21 +112,6 @@ public class ArticlesController {
         return new CommentResponse(maybeUserId, comment, authorProfile);
     }
 
-    @GetMapping("/{slug}")
-    public ArticleResponse getArticle(@PathVariable String slug) {
-        var maybeUserId = Optional.ofNullable(authenticationFacade.getAuthentication().getName());
-
-        var article = articlesService.getArticleBySlug(slug).orElse(null);
-
-        if (article == null) {
-            throw new NotFoundException("Article with slug '" + slug + "' not found");
-        }
-
-        var authorProfile = profilesService.getProfile(article.getAuthorId(), maybeUserId);
-
-        return new ArticleResponse(maybeUserId, article, authorProfile);
-    }
-
     @GetMapping()
     public MultipleArticlesResponse listArticles(
             @RequestParam(required = false) String tag,
@@ -183,7 +170,7 @@ public class ArticlesController {
                                 Optional.of(limit),
                                 Optional.of(offset)));
 
-        var articleResponses =
+        var articleResponseArticles =
                 articles.stream()
                         .map(
                                 article -> {
@@ -195,7 +182,51 @@ public class ArticlesController {
                                 })
                         .collect(Collectors.toList());
 
-        return new MultipleArticlesResponse(articleResponses);
+        return new MultipleArticlesResponse(articleResponseArticles);
+    }
+
+    @GetMapping("/{slug}")
+    public ArticleResponse getArticle(@PathVariable String slug) {
+        var maybeUserId = Optional.ofNullable(authenticationFacade.getAuthentication().getName());
+
+        var article = articlesService.getArticleBySlug(slug).orElse(null);
+
+        if (article == null) {
+            throw new NotFoundException("Article with slug '" + slug + "' not found");
+        }
+
+        var authorProfile = profilesService.getProfile(article.getAuthorId(), maybeUserId);
+
+        return new ArticleResponse(maybeUserId, article, authorProfile);
+    }
+
+    @GetMapping("/{slug}/comments")
+    @Transactional
+    public MultipleCommentsResponse getArticleComments(@PathVariable String slug) {
+        var maybeUserId = Optional.ofNullable(authenticationFacade.getAuthentication().getName());
+
+        var article = articlesService.getArticleBySlug(slug).orElse(null);
+
+        if (article == null) {
+            throw new NotFoundException("Article with slug '" + slug + "' not found");
+        }
+
+        var comments = articlesService.listCommentsByArticleId(article.getId());
+
+        var commentResponseComments =
+                comments.stream()
+                        .map(
+                                comment -> {
+                                    var authorProfile =
+                                            profilesService.getProfile(
+                                                    comment.getAuthorId(), maybeUserId);
+
+                                    return new CommentResponseComment(
+                                            maybeUserId, comment, authorProfile);
+                                })
+                        .collect(Collectors.toList());
+
+        return new MultipleCommentsResponse(commentResponseComments);
     }
 
     @PutMapping("/{slug}")

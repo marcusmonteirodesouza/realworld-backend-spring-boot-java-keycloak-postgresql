@@ -1,18 +1,18 @@
 package com.marcusmonteirodesouza.realworld.api.articles.controllers.dto;
 
 import com.marcusmonteirodesouza.realworld.api.articles.controllers.dto.ArticleResponse.ArticleResponseArticle;
-import java.util.Collection;
+import java.util.List;
 
 public class MultipleArticlesResponse {
-    private final Collection<ArticleResponseArticle> articles;
+    private final List<ArticleResponseArticle> articles;
     private final Integer articlesCount;
 
-    public MultipleArticlesResponse(Collection<ArticleResponseArticle> articles) {
+    public MultipleArticlesResponse(List<ArticleResponseArticle> articles) {
         this.articles = articles;
         this.articlesCount = articles.size();
     }
 
-    public Collection<ArticleResponseArticle> getArticles() {
+    public List<ArticleResponseArticle> getArticles() {
         return articles;
     }
 
