@@ -1,4 +1,4 @@
-package com.marcusmonteirodesouza.realworld.api.articles.repositories;
+package com.marcusmonteirodesouza.realworld.api.articles.repositories.tags;
 
 import com.marcusmonteirodesouza.realworld.api.articles.models.Tag;
 import org.springframework.data.jpa.repository.JpaRepository;

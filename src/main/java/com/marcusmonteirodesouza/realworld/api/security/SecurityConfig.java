@@ -25,6 +25,8 @@ public class SecurityConfig {
                                         .permitAll()
                                         .requestMatchers(HttpMethod.GET, "/profiles/*")
                                         .permitAll()
+                                        .requestMatchers(HttpMethod.GET, "/articles")
+                                        .permitAll()
                                         .requestMatchers(HttpMethod.GET, "/articles/*")
                                         .permitAll()
                                         .anyRequest()
