@@ -1,6 +1,7 @@
 package com.marcusmonteirodesouza.realworld.api.articles.models;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -11,7 +12,6 @@ import jakarta.validation.constraints.NotBlank;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import org.checkerframework.common.aliasing.qual.Unique;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -23,7 +23,9 @@ public class Article {
 
     @NotBlank private String authorId;
 
-    @NotBlank @Unique private String slug;
+    @Column(unique = true)
+    @NotBlank
+    private String slug;
 
     @NotBlank private String title;
 

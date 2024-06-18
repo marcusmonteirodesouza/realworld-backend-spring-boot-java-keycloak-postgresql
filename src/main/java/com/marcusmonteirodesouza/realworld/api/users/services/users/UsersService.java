@@ -1,12 +1,12 @@
 package com.marcusmonteirodesouza.realworld.api.users.services.users;
 
-import com.google.common.base.Optional;
 import com.marcusmonteirodesouza.realworld.api.exceptions.AlreadyExistsException;
 import com.marcusmonteirodesouza.realworld.api.users.models.User;
 import com.marcusmonteirodesouza.realworld.api.users.services.users.parameterobjects.UserUpdate;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import java.lang.invoke.MethodHandles;
+import java.util.Optional;
 import org.apache.commons.validator.routines.EmailValidator;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.keycloak.OAuth2Constants;
@@ -93,8 +93,8 @@ public class UsersService {
                 userRepresentation.getId(),
                 userRepresentation.getEmail(),
                 userRepresentation.getUsername(),
-                Optional.absent(),
-                Optional.absent());
+                Optional.empty(),
+                Optional.empty());
     }
 
     public Optional<User> getUserById(String userId) {
@@ -107,8 +107,8 @@ public class UsersService {
                         userRepresentation.getId(),
                         userRepresentation.getEmail(),
                         userRepresentation.getUsername(),
-                        Optional.fromNullable(userRepresentation.firstAttribute("bio")),
-                        Optional.fromNullable(userRepresentation.firstAttribute("image"))));
+                        Optional.ofNullable(userRepresentation.firstAttribute("bio")),
+                        Optional.ofNullable(userRepresentation.firstAttribute("image"))));
     }
 
     public Optional<User> getUserByEmail(String email) {
@@ -117,7 +117,7 @@ public class UsersService {
         var usersByEmail = usersResource.searchByEmail(email, true);
 
         if (usersByEmail.isEmpty()) {
-            return Optional.absent();
+            return Optional.empty();
         }
 
         var userRepresentation = usersByEmail.getFirst();
@@ -127,8 +127,8 @@ public class UsersService {
                         userRepresentation.getId(),
                         userRepresentation.getEmail(),
                         userRepresentation.getUsername(),
-                        Optional.fromNullable(userRepresentation.firstAttribute("bio")),
-                        Optional.fromNullable(userRepresentation.firstAttribute("image"))));
+                        Optional.ofNullable(userRepresentation.firstAttribute("bio")),
+                        Optional.ofNullable(userRepresentation.firstAttribute("image"))));
     }
 
     public Optional<User> getUserByUsername(String username) {
@@ -137,7 +137,7 @@ public class UsersService {
         var usersByEmail = usersResource.searchByUsername(username, true);
 
         if (usersByEmail.isEmpty()) {
-            return Optional.absent();
+            return Optional.empty();
         }
 
         var userRepresentation = usersByEmail.getFirst();
@@ -147,8 +147,8 @@ public class UsersService {
                         userRepresentation.getId(),
                         userRepresentation.getEmail(),
                         userRepresentation.getUsername(),
-                        Optional.fromNullable(userRepresentation.firstAttribute("bio")),
-                        Optional.fromNullable(userRepresentation.firstAttribute("image"))));
+                        Optional.ofNullable(userRepresentation.firstAttribute("bio")),
+                        Optional.ofNullable(userRepresentation.firstAttribute("image"))));
     }
 
     public String getToken(String username, String password) {
@@ -231,8 +231,8 @@ public class UsersService {
                         userRepresentation.getId(),
                         userRepresentation.getEmail(),
                         userRepresentation.getUsername(),
-                        Optional.fromNullable(userRepresentation.firstAttribute("bio")),
-                        Optional.fromNullable(userRepresentation.firstAttribute("image"))));
+                        Optional.ofNullable(userRepresentation.firstAttribute("bio")),
+                        Optional.ofNullable(userRepresentation.firstAttribute("image"))));
     }
 
     private void validateUsername(String username) throws AlreadyExistsException {

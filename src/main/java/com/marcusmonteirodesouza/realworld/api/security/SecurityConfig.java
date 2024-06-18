@@ -2,6 +2,7 @@ package com.marcusmonteirodesouza.realworld.api.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -18,13 +19,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(
                         authorizeHttpRequests ->
                                 authorizeHttpRequests
-                                        .requestMatchers(HttpMethod.POST, "/api/users")
+                                        .requestMatchers(HttpMethod.POST, "/users")
                                         .permitAll()
-                                        .requestMatchers(HttpMethod.POST, "/api/users/login")
+                                        .requestMatchers(HttpMethod.POST, "/users/login")
                                         .permitAll()
-                                        .requestMatchers(HttpMethod.GET, "/api/profiles/*")
+                                        .requestMatchers(HttpMethod.GET, "/profiles/*")
                                         .permitAll()
-                                        .requestMatchers(HttpMethod.GET, "/api/articles/*")
+                                        .requestMatchers(HttpMethod.GET, "/articles/*")
                                         .permitAll()
                                         .anyRequest()
                                         .authenticated());
@@ -36,7 +37,22 @@ public class SecurityConfig {
 
         http.oauth2ResourceServer(
                 oauth2ResourceServerCustomizer ->
-                        oauth2ResourceServerCustomizer.jwt(Customizer.withDefaults()));
+                        oauth2ResourceServerCustomizer
+                                .bearerTokenResolver(
+                                        httpServletRequest -> {
+                                            var header =
+                                                    httpServletRequest.getHeader(
+                                                            HttpHeaders.AUTHORIZATION);
+
+                                            if (header == null || header.isBlank()) {
+                                                return header;
+                                            }
+
+                                            var token = header.split("Token ")[1].trim();
+
+                                            return token;
+                                        })
+                                .jwt(Customizer.withDefaults()));
 
         return http.build();
     }

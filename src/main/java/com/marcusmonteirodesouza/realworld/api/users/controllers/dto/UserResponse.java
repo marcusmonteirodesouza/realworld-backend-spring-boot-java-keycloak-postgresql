@@ -24,8 +24,8 @@ public final class UserResponse {
             this.email = user.getEmail();
             this.username = user.getUsername();
             this.token = token;
-            this.bio = user.getBio().orNull();
-            this.image = user.getImage().orNull();
+            this.bio = user.getBio().orElse(null);
+            this.image = user.getImage().orElse(null);
         }
 
         public String getEmail() {

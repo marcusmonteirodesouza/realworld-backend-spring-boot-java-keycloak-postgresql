@@ -1,10 +1,10 @@
 package com.marcusmonteirodesouza.realworld.api.articles.controllers.dto;
 
-import com.google.common.base.Optional;
 import com.marcusmonteirodesouza.realworld.api.articles.models.Article;
 import com.marcusmonteirodesouza.realworld.api.profiles.models.Profile;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Optional;
 
 public class ArticleResponse {
     private final ArticleResponseArticle article;
@@ -51,8 +51,8 @@ public class ArticleResponse {
             this.author =
                     new ArticleResponseAuthor(
                             authorProfile.getUsername(),
-                            authorProfile.getBio().orNull(),
-                            authorProfile.getImage().orNull(),
+                            authorProfile.getBio().orElse(null),
+                            authorProfile.getImage().orElse(null),
                             authorProfile.getFollowing());
         }
 
