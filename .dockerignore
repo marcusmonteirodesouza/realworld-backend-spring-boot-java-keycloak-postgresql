@@ -1,0 +1,5 @@
+.vscode
+appdb-data
+keycloakdb-data
+target
+.env*
